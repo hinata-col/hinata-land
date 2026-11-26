@@ -8,19 +8,22 @@ service cloud.firestore {
     function onlyChanged(keys) {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
     }
-    // 一個計數 map 只改了一個 key，而且只加減 1、不會變負數
-    function oneStep(b, a) {
+    // 計數只能一次改一集（寫在 last 欄位），而且只加減 1、不會變負數
+    function stepOk(field) {
+      let k = request.resource.data.last;
+      let b = resource.data.get(field, {});
+      let a = request.resource.data.get(field, {});
       let ks = a.diff(b).affectedKeys();
-      let k = ks.toList()[0];
-      return ks.size() == 1
+      return k is string
+        && ks.size() == 1 && ks.hasOnly([k])
         && (a.get(k, 0) - b.get(k, 0) == 1 || a.get(k, 0) - b.get(k, 0) == -1)
         && a.get(k, 0) >= 0;
     }
     // 讚的數字要跟「我按過讚」的紀錄同時變動
-    function likeOk(b, a) {
-      let k = a.diff(b).affectedKeys().toList()[0];
+    function likeOk() {
+      let k = request.resource.data.last;
       let p = /databases/$(database)/documents/likes/$(me() + '_' + k);
-      return a.get(k, 0) > b.get(k, 0)
+      return request.resource.data.likes.get(k, 0) > resource.data.get('likes', {}).get(k, 0)
         ? (existsAfter(p) && !exists(p))
         : (!existsAfter(p) && exists(p));
     }
@@ -68,14 +71,14 @@ service cloud.firestore {
     match /stats/{area} {
       allow read: if true;
       allow create: if signedIn() && area in ['R', 'H', 'M']
-        && request.resource.data.keys().hasOnly(['likes', 'adds', 'cmts'])
+        && request.resource.data.keys().hasOnly(['likes', 'adds', 'cmts', 'last'])
         && request.resource.data.likes.size() == 0
         && request.resource.data.adds.size() == 0
         && request.resource.data.cmts.size() == 0;
       allow update: if signedIn() && (
-        (onlyChanged(['likes']) && oneStep(resource.data.likes, request.resource.data.likes) && likeOk(resource.data.likes, request.resource.data.likes))
-        || (onlyChanged(['adds']) && oneStep(resource.data.adds, request.resource.data.adds))
-        || (onlyChanged(['cmts']) && oneStep(resource.data.cmts, request.resource.data.cmts))
+        (onlyChanged(['likes', 'last']) && stepOk('likes') && likeOk())
+        || (onlyChanged(['adds', 'last']) && stepOk('adds'))
+        || (onlyChanged(['cmts', 'last']) && stepOk('cmts'))
       );
     }
 

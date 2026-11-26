@@ -117,7 +117,7 @@ async function bump(area, field, key, d) {
   if (!S.stats[area]) { await loadStats(area); }
   const m = statOf(area)[field];
   m[key] = Math.max(0, (m[key] || 0) + d);
-  return { op: 'update', path: 'stats/' + area, data: { [field + '.' + key]: fb.inc(d) } };
+  return { op: 'update', path: 'stats/' + area, data: { [field + '.' + key]: fb.inc(d), last: key } };
 }
 
 export async function toggleLike(e) {

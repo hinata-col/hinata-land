@@ -40,11 +40,14 @@ const strip = (t) => t.replace(/[\s　]*(上篇|中篇|下篇|前篇|後篇|前�
 
 function prepare() {
   ALL = S.eps[AREA];
-  ALL.forEach((e) => { if (e.n % 1 === 0 && e.n > maxN && e.date) { maxN = e.n; lastDate = e.date; } });
+  const today = new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10);
+  let maxAll = 0;
+  ALL.forEach((e) => { if (e.n % 1 === 0 && e.n > maxAll) { maxAll = e.n; } if (e.n % 1 === 0 && e.n > maxN && e.date && e.date <= today) { maxN = e.n; lastDate = e.date; } });
+  if (!maxN) { maxN = maxAll; }
   ranges = [];
-  if (maxN > 60) {
-    const top = Math.floor((maxN - 1) / 50) * 50 + 1;
-    ranges.push(['最新 ' + top + '–' + maxN, top, 9999]);
+  if (maxAll > 60) {
+    const top = Math.floor((maxAll - 1) / 50) * 50 + 1;
+    ranges.push(['最新 ' + top + '–' + maxAll, top, 9999]);
     for (let a = 1; a < top; a += 50) { ranges.push([a + '–' + (a + 49), a, a + 49]); }
   }
   ranges.push(['全部集數', 0, 9999]);

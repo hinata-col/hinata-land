@@ -7,7 +7,8 @@ function render() {
   g.innerHTML = OPEN.map((a) => {
     const A = AREAS[a]; const eps = S.eps[a];
     const total = eps.length; const seen = S.ready ? seenIn(a) : 0;
-    const maxN = eps.reduce((m, e) => (e.n % 1 === 0 && e.n > m ? e.n : m), 0);
+    const today = new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10);
+    const maxN = eps.reduce((m, e) => (e.n % 1 === 0 && e.n > m && (!e.date || e.date <= today) ? e.n : m), 0);
     const unit = a === 'M' ? ' 回' : ' 集';
     return '<a class="tk" href="' + A.page + '"><div class="ticket">'
       + '<div class="tmain"><span class="tno hd" style="background:' + A.ink + '">入園券 ' + A.no + '</span><img src="' + A.logo + '" alt="' + esc(A.jp) + ' 節目 LOGO"></div>'
