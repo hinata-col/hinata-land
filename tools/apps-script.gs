@@ -16,7 +16,10 @@ const SERIES_TAB = '系列清單';
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('日向坂樂園')
     .addItem('更新網站資料', 'publishSite')
+    .addItem('只重新部署網站', 'deployOnly')
+    .addSeparator()
     .addItem('設定 GitHub 金鑰', 'setToken')
+    .addItem('設定 Cloudflare 部署連結', 'setHook')
     .addToUi();
 }
 
@@ -28,6 +31,27 @@ function setToken() {
   if (!t) return;
   PropertiesService.getScriptProperties().setProperty('GITHUB_TOKEN', t);
   ui.alert('已儲存。之後按「更新網站資料」就會用這組金鑰。');
+}
+
+function setHook() {
+  const ui = SpreadsheetApp.getUi();
+  const r = ui.prompt('設定 Cloudflare 部署連結', '貼上 Cloudflare Pages「Deploy Hooks」產生的網址（https://api.cloudflare.com/...）', ui.ButtonSet.OK_CANCEL);
+  if (r.getSelectedButton() !== ui.Button.OK) return;
+  const t = r.getResponseText().trim();
+  if (!/^https:\/\/api\.cloudflare\.com\//.test(t)) { ui.alert('這看起來不是 Cloudflare 的部署連結，請再確認一次。'); return; }
+  PropertiesService.getScriptProperties().setProperty('DEPLOY_HOOK', t);
+  ui.alert('已儲存。之後更新網站資料時，會自動叫 Cloudflare 部署最新版。');
+}
+
+function triggerDeploy_() {
+  const hook = PropertiesService.getScriptProperties().getProperty('DEPLOY_HOOK');
+  if (!hook) return '（還沒設定部署連結，網站可能不會自動更新）';
+  const r = UrlFetchApp.fetch(hook, { method: 'post', muteHttpExceptions: true });
+  return r.getResponseCode() === 200 ? '已通知 Cloudflare 部署。' : '通知 Cloudflare 失敗（' + r.getResponseCode() + '）';
+}
+
+function deployOnly() {
+  SpreadsheetApp.getUi().alert(triggerDeploy_() + '\n大約 1 分鐘後網站就會是 GitHub 上的最新版。');
 }
 
 function buildData_() {
@@ -93,7 +117,7 @@ function publishSite() {
     const cur = JSON.parse(g.getContentText());
     sha = cur.sha;
     const old = cur.content ? Utilities.newBlob(Utilities.base64Decode(cur.content.replace(/\n/g, ''))).getDataAsString('UTF-8') : '';
-    try { const o = JSON.parse(old); o.updated = d.updated; if (JSON.stringify(o) === json) { ui.alert('資料跟網站上的一樣，不用更新。'); return; } } catch (e) {}
+    try { const o = JSON.parse(old); o.updated = d.updated; if (JSON.stringify(o) === json) { ui.alert('資料跟 GitHub 上的一樣，不用更新。\n' + triggerDeploy_()); return; } } catch (e) {}
   } else if (g.getResponseCode() !== 404) {
     ui.alert('連不上 GitHub（' + g.getResponseCode() + '）。金鑰可能過期或權限不足，請重新設定。\n\n' + g.getContentText().slice(0, 300)); return;
   }
@@ -101,7 +125,7 @@ function publishSite() {
   if (sha) body.sha = sha;
   const p = UrlFetchApp.fetch(api, { method: 'put', headers: headers, contentType: 'application/json', payload: JSON.stringify(body), muteHttpExceptions: true });
   if (p.getResponseCode() === 200 || p.getResponseCode() === 201) {
-    ui.alert('已送出！大約 1 分鐘後網站就會更新。\n\n' + summary);
+    ui.alert('已送出！' + triggerDeploy_() + '\n大約 1 分鐘後網站就會更新。\n\n' + summary);
   } else {
     ui.alert('更新失敗（' + p.getResponseCode() + '）：\n' + p.getContentText().slice(0, 400));
   }
