@@ -32,7 +32,7 @@ const TEXT = {
 }[AREA];
 
 const urlList = new URLSearchParams(location.search).get('list') || '';
-const F = { q: '', range: '', cat: '全部', status: '全部', sortBy: '集數', sortDir: 'asc', limit: 20, openSeries: '', allSeries: false, help: false, pop: '', open: '', listFilter: urlList };
+const F = { mopen: '', q: '', range: '', cat: '全部', status: '全部', sortBy: '集數', sortDir: 'asc', limit: 20, openSeries: '', allSeries: false, help: false, pop: '', open: '', listFilter: urlList };
 const tint = ['#FFB3AB', '#FFE08A', '#A8EBE2', '#CFC4FF', '#FFC2D6', '#BFE0FF'];
 let ALL = [], maxN = 0, lastDate = '', ranges = [], SER = [];
 
@@ -78,14 +78,17 @@ function renderHero() {
   document.title = A.name + ' · 日向坂樂園';
 }
 
-function renderMust() {
+function renderMust() { keepInputs('#mustg', renderMustInner); }
+function renderMustInner() {
   const top = ALL.filter((e) => likesOf(e) > 0).sort((x, y) => (likesOf(y) - likesOf(x)) || (x.n - y.n)).slice(0, 6);
   if (!top.length) {
     $('#mustg').innerHTML = '<div class="card must" style="background:#FFFFFF;grid-column:1/-1"><h3 class="hd">還沒有人按讚</h3><div class="meta">到下面的園區地圖，幫你喜歡的集數按個「♡ 讚」，讚最多的幾集就會排到這裡。</div></div>';
     return;
   }
-  $('#mustg').innerHTML = top.map((e, k) => '<div class="card must" style="background:' + tint[k % tint.length] + '"><div class="pills"><span class="rk hd">第 ' + (k + 1) + ' 名</span><span class="epb hd">#' + esc(e.id) + '</span></div>'
-    + '<h3 class="hd">' + esc(titleOf(e)) + '</h3><div class="meta">讚 ' + likesOf(e) + '　收藏 ' + addsOf(e) + '</div></div>').join('');
+  $('#mustg').innerHTML = top.map((e, k) => '<div class="card must' + (F.mopen === e.key ? ' open' : '') + '" style="background:' + tint[k % tint.length] + '"><div class="pills"><span class="rk hd">第 ' + (k + 1) + ' 名</span><span class="epb hd">#' + esc(e.id) + '</span></div>'
+    + '<h3 class="hd">' + esc(titleOf(e)) + '</h3><div class="meta">讚 ' + likesOf(e) + '　收藏 ' + addsOf(e) + '</div>'
+    + '<div class="mact"><button type="button" class="btn act" data-act="mcmt" data-arg="' + e.key + '" aria-expanded="' + (F.mopen === e.key) + '">留言 ' + cmtsOf(e) + '</button>' + vlinkHtml(e) + '</div>'
+    + (F.mopen === e.key ? cmtDrawer(e, 'mc-') : '') + '</div>').join('');
 }
 
 function renderSeries() {
@@ -95,7 +98,7 @@ function renderSeries() {
     const first = '#' + sr.groups[0].from;
     const last = '#' + sr.groups[sr.groups.length - 1].to;
     let h = '<div class="card scard' + (isOpen ? ' open' : '') + '" style="background:#FFFFFF"><button type="button" class="shead hd" data-act="ser" data-arg="' + esc(sr.name) + '" aria-expanded="' + isOpen + '" style="background:' + S.tagColor[sr.name] + '">'
-      + '<span class="sname" style="font-size:22px;font-weight:900;line-height:1.3">' + esc(sr.name) + '</span><span class="smeta">做過 ' + sr.groups.length + ' 次 · ' + (first === last ? first : first + '–' + last) + '</span><em>' + (isOpen ? '收合 ▴' : '展開 ▾') + '</em></button>';
+      + '<span class="sname" style="font-size:22px;font-weight:900;line-height:1.3">' + esc(sr.name) + '</span><em>' + (isOpen ? '收合 ▴' : '展開 ▾') + '</em></button>';
     if (isOpen) {
       h += '<div class="sbody"><div class="slist">' + sr.groups.map((g) => '<div class="sitem"><span class="sep hd">' + (g.from === g.to ? '#' + esc(g.from) : '#' + esc(g.from) + '–' + esc(g.to)) + '</span><span>' + esc(g.title) + '</span></div>').join('')
         + '</div><a class="slink" href="#all" data-act="serAll" data-arg="' + esc(sr.name) + '">在園區地圖看這個系列 →</a></div>';
@@ -141,6 +144,23 @@ function filtered() {
     .sort((x, y) => (mul * (val(x) - val(y))) || (x.n - y.n));
 }
 
+function cmtDrawer(e, kp) {
+  let h = '';
+    const cs = S.comments[e.key];
+    h += '<div class="drawer" style="background:#EAF6FF"><h4 class="hd">留言與推薦看點</h4>';
+    if (!cs) { h += '<div style="font-size:14px">讀取中…</div>'; }
+    else if (!cs.length) { h += '<div style="font-size:14px">還沒有人留言，來當第一個分享看點的人吧。</div>'; }
+    else {
+      h += cs.map((c) => '<div class="cmt"><div class="cmth"><small>' + esc(c.nick) + '</small>' + (c.uid === S.uid
+        ? '<button type="button" class="rpt" data-act="delCmt" data-arg="' + e.key + '|' + c.id + '">刪除</button>'
+        : '<button type="button" class="rpt" data-act="report" data-arg="' + c.id + '">檢舉</button>') + '</div>' + esc(c.text) + '</div>').join('');
+    }
+    h += '<form data-form="cmt" data-key="' + e.key + '"><label>分享這集的看點（請不要劇透結果）<input name="t" type="text" maxlength="140" data-keep="' + kp + e.key + '" placeholder="例：前半的即興劇超好笑"></label><button type="submit" class="btn pri">送出</button></form>'
+      + '<div class="asnick">留言會顯示為「' + esc(S.nick) + '」　<button type="button" class="lnk" data-act="nick">改暱稱</button></div></div>';
+  return h;
+}
+const vlinkHtml = (e) => (S.links[e.key] && /^https:\/\//.test(S.links[e.key]) ? '<a class="btn act vlink" href="' + esc(S.links[e.key]) + '" target="_blank" rel="noopener noreferrer">▶ 中字</a>' : '');
+
 function rowHtml(e) {
   const seen = !!S.seen[e.key], liked = !!S.liked[e.key];
   const picked = S.lists.some((l) => l.items.indexOf(e.key) >= 0);
@@ -153,34 +173,29 @@ function rowHtml(e) {
     + '<div class="rd"><button type="button" class="btn act" data-act="like" data-arg="' + e.key + '" aria-pressed="' + liked + '">' + (liked ? '♥ 讚 ' : '♡ 讚 ') + likesOf(e) + '</button>'
     + '<button type="button" class="btn act" data-act="pop" data-arg="' + e.key + '" aria-expanded="' + isPop + '">' + (picked ? '★ 收藏 ' : '☆ 收藏 ') + addsOf(e) + '</button>'
     + '<button type="button" class="btn act" data-act="cmt" data-arg="' + e.key + '" aria-expanded="' + isOpen + '">留言 ' + cmtsOf(e) + '</button>'
-    + (S.links[e.key] && /^https:\/\//.test(S.links[e.key]) ? '<a class="btn act vlink" href="' + esc(S.links[e.key]) + '" target="_blank" rel="noopener noreferrer">▶ 中字</a>' : '') + '</div>';
+    + vlinkHtml(e) + '</div>';
   if (isPop) {
     h += '<div class="drawer" style="background:#FFF1C2"><h4 class="hd">放進哪份清單？（可以多選）</h4><div class="pills">'
       + S.lists.map((l) => { const on = l.items.indexOf(e.key) >= 0; return '<button type="button" class="btn" data-act="inList" data-arg="' + l.id + '|' + e.key + '" aria-pressed="' + on + '">' + (on ? '✓ ' : '') + esc(l.name) + '（' + l.items.length + '）</button>'; }).join('')
       + '</div><form data-form="newList" data-key="' + e.key + '"><label>或是開一份新清單，直接把這集放進去<input name="n" type="text" maxlength="30" data-keep="nl-' + e.key + '" placeholder="清單名稱，例如：新手入門 5 選"></label><button type="submit" class="btn pri">新增並放進去</button></form></div>';
   }
-  if (isOpen) {
-    const cs = S.comments[e.key];
-    h += '<div class="drawer" style="background:#EAF6FF"><h4 class="hd">留言與推薦看點</h4>';
-    if (!cs) { h += '<div style="font-size:14px">讀取中…</div>'; }
-    else if (!cs.length) { h += '<div style="font-size:14px">還沒有人留言，來當第一個分享看點的人吧。</div>'; }
-    else {
-      h += cs.map((c) => '<div class="cmt"><div class="cmth"><small>' + esc(c.nick) + '</small>' + (c.uid === S.uid
-        ? '<button type="button" class="rpt" data-act="delCmt" data-arg="' + e.key + '|' + c.id + '">刪除</button>'
-        : '<button type="button" class="rpt" data-act="report" data-arg="' + c.id + '">檢舉</button>') + '</div>' + esc(c.text) + '</div>').join('');
-    }
-    h += '<form data-form="cmt" data-key="' + e.key + '"><label>分享這集的看點（請不要劇透結果）<input name="t" type="text" maxlength="140" data-keep="c-' + e.key + '" placeholder="例：前半的即興劇超好笑"></label><button type="submit" class="btn pri">送出</button></form>'
-      + '<div class="asnick">留言會顯示為「' + esc(S.nick) + '」　<button type="button" class="lnk" data-act="nick">改暱稱</button></div></div>';
-  }
+  if (isOpen) { h += cmtDrawer(e, 'c-'); }
   return h + '</article>';
 }
 
-function renderRows() {
-  // 重畫前記住正在輸入的欄位
+// 重畫時保留正在輸入的文字
+function keepInputs(sel, fn) {
   const ae = document.activeElement;
   const keep = ae && ae.getAttribute && ae.getAttribute('data-keep') ? { k: ae.getAttribute('data-keep'), v: ae.value, s: ae.selectionStart } : null;
   const vals = {};
-  document.querySelectorAll('#rows [data-keep]').forEach((i) => { vals[i.getAttribute('data-keep')] = i.value; });
+  document.querySelectorAll(sel + ' [data-keep]').forEach((i) => { vals[i.getAttribute('data-keep')] = i.value; });
+  fn();
+  document.querySelectorAll(sel + ' [data-keep]').forEach((i) => { const k = i.getAttribute('data-keep'); if (vals[k]) { i.value = vals[k]; } });
+  if (keep) { const i = document.querySelector(sel + ' [data-keep="' + keep.k + '"]'); if (i) { i.value = keep.v; i.focus(); try { i.setSelectionRange(keep.s, keep.s); } catch (err) {} } }
+}
+
+function renderRows() { keepInputs('#rows', renderRowsInner); }
+function renderRowsInner() {
 
   const list = filtered();
   const shown = list.slice(0, F.limit);
@@ -197,8 +212,6 @@ function renderRows() {
   if (lf) { ban.style.display = ''; ban.innerHTML = '<span>目前只看你的清單「' + esc(lf.name) + '」，共 ' + list.length + ' 集</span><button type="button" class="btn" data-act="clearList">顯示全部集數</button>'; }
   else { ban.style.display = 'none'; }
 
-  document.querySelectorAll('#rows [data-keep]').forEach((i) => { const k = i.getAttribute('data-keep'); if (vals[k]) { i.value = vals[k]; } });
-  if (keep) { const i = document.querySelector('#rows [data-keep="' + keep.k + '"]'); if (i) { i.value = keep.v; i.focus(); try { i.setSelectionRange(keep.s, keep.s); } catch (err) {} } }
 }
 
 function renderProg() {
@@ -228,6 +241,7 @@ async function main() {
     seen: (k) => setSeen(k, !S.seen[k]),
     like: (k) => toggleLike(byKey(k)),
     pop: (k) => { F.pop = F.pop === k ? '' : k; F.open = ''; renderRows(); },
+    mcmt: (k) => { F.mopen = F.mopen === k ? '' : k; renderMust(); if (F.mopen) { loadComments(k); } },
     cmt: (k) => { F.open = F.open === k ? '' : k; F.pop = ''; renderRows(); if (F.open) { loadComments(k); } },
     inList: (arg) => { const p = arg.split('|'); toggleInList(p[0], p[1]); },
     delCmt: (arg) => { const p = arg.split('|'); deleteComment(byKey(p[0]), p[1]); },

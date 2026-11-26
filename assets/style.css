@@ -347,3 +347,6 @@ footer{padding:24px 16px}
 }
 .vlink{background:#1F2A5A!important;color:#FFFFFF!important;text-decoration:none}
 .rs .vlink{display:inline-flex}
+.mact{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.must .drawer{margin-top:10px}
+.must.open{grid-column:1/-1}
