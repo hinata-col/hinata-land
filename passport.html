@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>我的護照 · 日向坂樂園</title>
+<meta name="description" content="日向坂46 冠番組的看點導覽：查集數、找系列企劃、記下自己看到哪裡，和其他おひさま分享推薦清單。">
+<meta property="og:title" content="我的護照 · 日向坂樂園">
+<meta property="og:description" content="日向坂46 冠番組的看點導覽：查集數、找系列企劃、記下自己看到哪裡，和其他おひさま分享推薦清單。">
+<meta property="og:type" content="website">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500&family=Zen+Maru+Gothic:wght@500;700;900&family=Huninn&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<div class="page">
+<div id="hdr"></div>
+<section class="wrap ptop">
+<h1 class="hd ptitle">我的護照</h1>
+<p class="plead">看到哪一集、收藏了哪些清單，都記在這本護照裡。清單可以開好幾份，自己取名、排順序，要公開給大家看，或只傳給朋友都可以。</p>
+</section>
+<section class="wrap" style="padding-top:8px;padding-bottom:72px" id="pp">
+<div class="card seenall" id="seenall"><h2 class="hd">看過紀錄</h2></div>
+<h2 class="hd psec">我做的清單</h2>
+<div class="tabs" role="group" aria-label="我的清單" id="tabs"></div>
+<div class="pgrid">
+<div class="card editor" id="editor"></div>
+<div class="card info">
+<h3 class="hd">公開還是不公開？</h3>
+<p>設成公開，清單會出現在「遊客推薦」，大家都逛得到。不公開的話，只有拿到連結的人看得到。</p>
+<h3 class="hd" style="margin-top:12px">一定要登入嗎？</h3>
+<p>不用。沒登入時，資料存在這台裝置的瀏覽器裡，清掉瀏覽資料或換手機就會不見，不過已經傳出去的連結還是打得開。</p>
+<p>用 Google 登入後，資料存在帳號裡，換裝置也看得到，之前存的紀錄會一起搬過去。</p>
+<h3 class="hd" style="margin-top:12px">收藏清單和複製清單差在哪？</h3>
+<p>收藏別人的清單，會一直看到作者的最新版本，但不能改。按「複製一份來改」則會變成你自己的清單，之後跟原版無關。</p>
+</div>
+</div>
+<h2 class="hd psec" style="margin-top:32px">我收藏的清單</h2>
+<div id="favs"></div>
+<p class="note" style="margin-top:10px">收藏的清單會跟著原作者更新；想自己改的話，打開清單按「複製一份來改」。</p>
+</section>
+<footer id="ftr"></footer>
+</div>
+<script type="module" src="/assets/passport.js"></script>
+</body>
+</html>

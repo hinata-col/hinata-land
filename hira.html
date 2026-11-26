@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>平假名推 · 日向坂樂園</title>
+<meta name="description" content="日向坂46 冠番組的看點導覽：查集數、找系列企劃、記下自己看到哪裡，和其他おひさま分享推薦清單。">
+<meta property="og:title" content="平假名推 · 日向坂樂園">
+<meta property="og:description" content="日向坂46 冠番組的看點導覽：查集數、找系列企劃、記下自己看到哪裡，和其他おひさま分享推薦清單。">
+<meta property="og:type" content="website">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500&family=Zen+Maru+Gothic:wght@500;700;900&family=Huninn&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body data-area="R">
+<div class="page">
+<div id="hdr"></div>
+<section id="top" class="wrap hero"></section>
+
+<section id="paths" class="wrap">
+<div class="stitle hd" style="background:#D6382E;color:#FFFFFF">遊玩路線</div>
+<div class="pg">
+<a class="card path" href="#must" style="background:#FFB3AB"><span class="tag hd">快速通關券</span><h3 class="hd">我想先挑一集來看</h3><p>從大家按讚最多的集數挑一集。每集約 30 分鐘，有些企劃分上下兩集。</p><span class="go">去人氣設施 →</span></a>
+<a class="card path" href="#series" style="background:#FFE08A"><span class="tag hd">主題園區巡禮</span><h3 class="hd">我想依系列挑</h3><p id="p2"></p><span class="go">去主題園區 →</span></a>
+<a class="card path" href="#all" style="background:#A8EBE2"><span class="tag hd">完整暢遊券</span><h3 class="hd">我想從頭追</h3><p id="p3"></p><span class="go">打開園區地圖 →</span></a>
+</div>
+</section>
+
+<section id="must" class="wrap">
+<div class="stitle hd" style="background:#FFC83D">人氣設施</div>
+<div class="mustg" id="mustg"></div>
+</section>
+
+<section id="series" class="wrap">
+<div class="stitle hd" style="background:#0B7A70;color:#FFFFFF">主題園區</div>
+<div class="sgrid" id="sgrid"></div>
+<div id="smore" style="display:none;justify-content:center;margin-top:18px"></div>
+</section>
+
+<section id="all" class="wrap" style="padding-bottom:72px">
+<div class="stitle hd" style="background:#5B3FD6;color:#FFFFFF">園區地圖</div>
+<p class="lead" id="lead"></p>
+<div class="card fpanel">
+<label class="search">搜尋<input id="fSearch" type="search" placeholder="中文或日文標題、集數，例如：運動會、ダービー、47" aria-label="搜尋集數"></label>
+<div class="fgrid">
+<label class="sl" id="fRangeWrap">集數<select id="fRange"></select></label>
+<label class="sl">類別<select id="fCat"></select></label>
+<label class="sl">狀態<select id="fStatus"></select></label>
+<div class="sl"><span id="fSortLab">排序</span><div class="sortc"><select id="fSort" aria-label="排序方式"></select><button type="button" class="btn" id="fDir" data-act="dir">▲</button></div></div>
+</div>
+<div class="frow"><button type="button" class="btn ghost" id="helpBtn" data-act="help" aria-expanded="false">怎麼用？</button><div class="prog" id="prog"></div></div>
+<div class="help" id="help" style="display:none">
+<div class="hbox" style="background:#EFFBF4"><b>☐ 看過</b>幫自己記進度，只有你看得到。</div>
+<div class="hbox" style="background:#FFF1C2"><b>讚</b>覺得好看就按一下，讚最多的幾集會排進「人氣設施」。</div>
+<div class="hbox" style="background:#FFE3EC"><b>收藏</b>把這集放進你的清單，同一集可以放進好幾份。</div>
+<div class="hbox" style="background:#EAF6FF"><b>留言</b>分享你覺得好看的地方，也可以看看別人怎麼說。</div>
+</div>
+</div>
+<div class="banner" id="banner" style="display:none"></div>
+<p class="note" id="note" style="display:none"></p>
+<div class="card rows" id="rows"></div>
+<div class="empty" id="empty" style="display:none">找不到符合的集數，換個關鍵字或篩選條件試試看。</div>
+<div class="more" id="more" style="display:none"></div>
+</section>
+<div class="stk" id="stk"></div>
+<footer id="ftr"></footer>
+</div>
+<script type="module" src="/assets/area.js"></script>
+</body>
+</html>

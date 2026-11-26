@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>遊客推薦 · 日向坂樂園</title>
+<meta name="description" content="日向坂46 冠番組的看點導覽：查集數、找系列企劃、記下自己看到哪裡，和其他おひさま分享推薦清單。">
+<meta property="og:title" content="遊客推薦 · 日向坂樂園">
+<meta property="og:description" content="日向坂46 冠番組的看點導覽：查集數、找系列企劃、記下自己看到哪裡，和其他おひさま分享推薦清單。">
+<meta property="og:type" content="website">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500&family=Zen+Maru+Gothic:wght@500;700;900&family=Huninn&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<div class="page">
+<div id="hdr"></div>
+<section class="wrap ptop">
+<h1 class="hd ptitle">大家的推薦清單</h1>
+<p class="plead">其他おひさま公開分享的私房清單，點開就能照著看。</p>
+</section>
+<section class="wrap" style="padding-top:8px;padding-bottom:72px">
+<div class="card gfilter">
+<div class="gfrow">
+<label class="search gsearch">搜尋<input id="gq" type="search" placeholder="清單名稱、暱稱或標籤，例如：新手、爆笑"></label>
+<label class="sl gsort">排序<select id="gsort"><option>最多人收藏</option><option>最新</option></select></label>
+<button type="button" class="btn pri groll" data-act="roll" id="groll">🎲 隨機推薦一份</button>
+</div>
+<div class="pills gtags" role="group" aria-label="依標籤篩選" id="gtags"></div>
+</div>
+<div id="gpick"></div>
+<div class="gcount" id="gcount"></div>
+<div class="gg" id="gg"></div>
+<div class="empty" id="gempty" style="display:none">找不到符合的清單，換個關鍵字或標籤試試看。</div>
+<div class="more" id="gmore" style="display:none"><button type="button" class="btn big" data-act="more">再顯示 9 份</button></div>
+<p class="note" style="margin-top:18px">想把自己的清單也放上來？到「我的護照」把它設成公開，再挑幾個標籤就可以了。按「☆ 收藏」的清單，會出現在你的護照裡。</p>
+</section>
+<footer id="ftr"></footer>
+</div>
+<script type="module" src="/assets/gallery.js"></script>
+</body>
+</html>
