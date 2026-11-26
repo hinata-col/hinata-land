@@ -345,3 +345,5 @@ footer{padding:24px 16px}
 .toast{bottom:84px;font-size:13px}
 .gate.one{grid-template-columns:minmax(0,1fr)}
 }
+.vlink{background:#1F2A5A!important;color:#FFFFFF!important;text-decoration:none}
+.rs .vlink{display:inline-flex}

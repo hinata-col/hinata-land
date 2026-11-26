@@ -102,6 +102,17 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.uid == me();
     }
 
+    // 影片連結：只有白名單（admin/acl 的 emails）上的 Google 帳號讀得到；只能從試算表寫入
+    match /vault/{doc} {
+      allow read: if signedIn()
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.lower() in get(/databases/$(database)/documents/admin/acl).data.emails;
+    }
+    // 白名單本身誰都讀不到（試算表用管理員權限寫入）
+    match /admin/{doc} {
+      allow read, write: if false;
+    }
+
     // 檢舉（只能送出，站長在主控台看）
     match /reports/{id} {
       allow create: if signedIn() && request.resource.data.uid == me()

@@ -19,7 +19,7 @@ export const $ = (sel, root) => (root || document).querySelector(sel);
 // ── 狀態 ──────────────────────────────────────────
 export const S = {
   ready: false, uid: '', isAnon: true, nick: DEFAULT_NICK,
-  seen: {}, favs: [], liked: {}, lists: [], stats: {}, comments: {},
+  seen: {}, favs: [], liked: {}, links: {}, lists: [], stats: {}, comments: {},
   eps: { R: [], H: [], M: [] }, byKey: {}, series: [], tagColor: {}, updated: ''
 };
 const subs = [];
@@ -61,7 +61,12 @@ async function loadUser() {
   const [mine, likes] = await Promise.all([fb.where('lists', 'owner', S.uid), fb.where('likes', 'uid', S.uid)]);
   S.lists = mine.sort((x, y) => (tsOf(x.at) - tsOf(y.at)));
   S.liked = {};
-  likes.forEach((l) => { S.liked[l.key] = true; });
+  likes.forEach((l) => { S.liked[l.key] = true; });  await loadLinks();
+}
+async function loadLinks() {
+  S.links = {};
+  if (S.isAnon) { return; }
+  try { const v = await fb.get('vault/links'); if (v) { ['R', 'H', 'M'].forEach((a) => Object.assign(S.links, v[a] || {})); } } catch (e) { /* 不在白名單 */ }
 }
 const tsOf = (t) => (t && t.toMillis ? t.toMillis() : (typeof t === 'number' ? t : 0));
 export { tsOf };
@@ -254,6 +259,7 @@ export async function login() {
     for (const l of before.lists) { if (l.items.length) { await createList(l.name, l.items); } }
   } else {
     S.isAnon = false;
+    await loadLinks();
   }
   emit();
   toast('登入成功，資料已經同步到你的帳號');

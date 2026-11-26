@@ -32,7 +32,8 @@ function render() {
         + '<div class="ra"><span class="ep hd">' + esc(epLabel(e)) + '</span><span class="date">' + esc(e.date || '特別篇') + '</span></div>'
         + '<div class="rb"><div class="tt">' + esc(titleOf(e)) + '</div>' + (e.jp && e.zh ? '<div class="jp" lang="ja">' + esc(e.jp) + '</div>' : '') + '</div>'
         + '<div class="rc">' + e.tags.map((t) => '<span class="chip" style="background:' + S.tagColor[t] + '">' + esc(t) + '</span>').join('') + '</div>'
-        + '<div class="rs"><button type="button" class="seen" data-act="seen" data-arg="' + e.key + '" aria-pressed="' + s + '">' + (s ? '☑ 看過' : '☐ 看過') + '</button></div></article>';
+        + '<div class="rs"><button type="button" class="seen" data-act="seen" data-arg="' + e.key + '" aria-pressed="' + s + '">' + (s ? '☑ 看過' : '☐ 看過') + '</button>'
+        + (S.links[e.key] && /^https:\/\//.test(S.links[e.key]) ? '<a class="btn act vlink" style="margin-top:6px" href="' + esc(S.links[e.key]) + '" target="_blank" rel="noopener noreferrer">▶ 中字</a>' : '') + '</div></article>';
     }).join('') + (eps.length ? '' : '<div class="empty">這份清單還沒有集數。</div>') + '</div></section>';
 }
 

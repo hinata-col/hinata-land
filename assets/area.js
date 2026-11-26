@@ -152,7 +152,8 @@ function rowHtml(e) {
     + '<div class="rc">' + e.tags.map((t) => '<span class="chip" style="background:' + S.tagColor[t] + '">' + esc(t) + '</span>').join('') + '</div>'
     + '<div class="rd"><button type="button" class="btn act" data-act="like" data-arg="' + e.key + '" aria-pressed="' + liked + '">' + (liked ? '♥ 讚 ' : '♡ 讚 ') + likesOf(e) + '</button>'
     + '<button type="button" class="btn act" data-act="pop" data-arg="' + e.key + '" aria-expanded="' + isPop + '">' + (picked ? '★ 收藏 ' : '☆ 收藏 ') + addsOf(e) + '</button>'
-    + '<button type="button" class="btn act" data-act="cmt" data-arg="' + e.key + '" aria-expanded="' + isOpen + '">留言 ' + cmtsOf(e) + '</button></div>';
+    + '<button type="button" class="btn act" data-act="cmt" data-arg="' + e.key + '" aria-expanded="' + isOpen + '">留言 ' + cmtsOf(e) + '</button>'
+    + (S.links[e.key] && /^https:\/\//.test(S.links[e.key]) ? '<a class="btn act vlink" href="' + esc(S.links[e.key]) + '" target="_blank" rel="noopener noreferrer">▶ 中字</a>' : '') + '</div>';
   if (isPop) {
     h += '<div class="drawer" style="background:#FFF1C2"><h4 class="hd">放進哪份清單？（可以多選）</h4><div class="pills">'
       + S.lists.map((l) => { const on = l.items.indexOf(e.key) >= 0; return '<button type="button" class="btn" data-act="inList" data-arg="' + l.id + '|' + e.key + '" aria-pressed="' + on + '">' + (on ? '✓ ' : '') + esc(l.name) + '（' + l.items.length + '）</button>'; }).join('')
