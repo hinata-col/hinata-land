@@ -1,4 +1,2 @@
 /data/*
   Cache-Control: public, max-age=60
-/assets/*
-  Cache-Control: public, max-age=3600

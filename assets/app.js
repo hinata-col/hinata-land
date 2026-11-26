@@ -129,7 +129,7 @@ export async function toggleLike(e) {
   const likePath = 'likes/' + S.uid + '_' + e.key;
   try {
     await fb.batch([on ? { op: 'set', path: likePath, data: { uid: S.uid, key: e.key, at: fb.now() } } : { op: 'delete', path: likePath }, st]);
-  } catch (err) { console.error(err); toast('按讚沒有成功，請再試一次'); }
+  } catch (err) { console.error(err); toast('按讚沒有成功（' + (err && err.code ? err.code : err) + '）', 6000); }
 }
 
 // ── 清單 ──────────────────────────────────────────
