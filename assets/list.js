@@ -19,7 +19,7 @@ function render() {
   const seenN = eps.filter((e) => S.seen[e.key]).length;
   document.title = L.name + ' · 日向坂樂園';
   $('#lv').innerHTML = '<section class="wrap ptop"><h1 class="hd ptitle">' + esc(L.name) + '</h1>'
-    + '<div class="vmeta">' + esc(L.nick || '') + '　·　共 ' + eps.length + ' 集　·　' + (L.isPublic ? '公開在遊客推薦' : '只有拿到連結的人看得到') + '</div>'
+    + '<div class="vmeta">' + esc(L.nick === '匿名おひさま' ? 'おひさま' : (L.nick || '')) + '　·　共 ' + eps.length + ' 集　·　' + (L.isPublic ? '公開在遊客推薦' : '只有拿到連結的人看得到') + '</div>'
     + ((L.tags || []).length ? '<div class="gchips" style="margin-top:8px">' + L.tags.map((t) => '<span class="chip">#' + esc(t) + '</span>').join('') + '</div>' : '')
     + '<div class="vhead">'
     + (mine ? '<a class="btn pri" href="/passport" data-act="edit">編輯這份清單</a>' : '<button type="button" class="btn pri" data-act="fav" aria-pressed="' + fav + '">' + (fav ? '★ 已收藏' : '☆ 收藏這份清單') + '</button><button type="button" class="btn" data-act="dup">複製一份來改</button>')

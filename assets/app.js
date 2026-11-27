@@ -15,7 +15,8 @@ export const SETTINGS = {};
 export const setting = (key, def) => (SETTINGS[key] && String(SETTINGS[key]).trim()) || def;
 export const PAL = ['#FFB3AB', '#FFC2D6', '#BFE0FF', '#C8F0B0', '#FFD9A8', '#FFE08A', '#A8EBE2', '#CFC4FF', '#F7C9F0', '#D5F0FF'];
 export const LTAGS = ['新手入門', '爆笑', '感動', '外景', '系列企劃', '成員推', '冷門寶藏'];
-export const DEFAULT_NICK = '匿名おひさま';
+export const DEFAULT_NICK = 'おひさま';
+const OLD_DEFAULT_NICK = '匿名おひさま';
 
 export const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 export const $ = (sel, root) => (root || document).querySelector(sel);
@@ -68,10 +69,12 @@ async function loadUser() {
     await fb.set('users/' + S.uid, Object.assign({ at: fb.now() }, u));
   }
   S.nick = u.nick || DEFAULT_NICK;
+  if (S.nick === OLD_DEFAULT_NICK) { S.nick = DEFAULT_NICK; fb.update('users/' + S.uid, { nick: DEFAULT_NICK }).catch(() => {}); }
   S.seen = u.seen || {};
   S.favs = u.favs || [];
   const [mine, likes] = await Promise.all([fb.where('lists', 'owner', S.uid), fb.where('likes', 'uid', S.uid)]);
   S.lists = mine.sort((x, y) => (tsOf(x.at) - tsOf(y.at)));
+  S.lists.forEach((l) => { if (l.nick === OLD_DEFAULT_NICK) { l.nick = DEFAULT_NICK; fb.update('lists/' + l.id, { nick: DEFAULT_NICK }).catch(() => {}); } });
   S.liked = {};
   likes.forEach((l) => { S.liked[l.key] = true; });  await loadLinks();
 }

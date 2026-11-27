@@ -14,7 +14,7 @@ function card(l) {
   const prev = items.slice(0, 3).map((k) => S.byKey[k]).filter(Boolean);
   return '<div class="card gcard" style="background:' + (mine ? '#FFF1C2' : '#FFFFFF') + '">'
     + (mine ? '<span class="gbadge">你的清單</span>' : '')
-    + '<h3 class="hd">' + esc(l.name) + '</h3><div style="font-size:13px;font-weight:700">' + esc(l.nick || '') + '　·　' + items.length + ' 集　·　★ ' + favN(l) + ' 人收藏</div>'
+    + '<h3 class="hd">' + esc(l.name) + '</h3><div style="font-size:13px;font-weight:700">' + esc(l.nick === '匿名おひさま' ? 'おひさま' : (l.nick || '')) + '　·　' + items.length + ' 集　·　★ ' + favN(l) + ' 人收藏</div>'
     + '<div class="gchips">' + (l.tags || []).map((t) => '<button type="button" class="chip gchip" style="' + tagStyle(t) + '" data-act="tag" data-arg="' + esc(t) + '">#' + esc(t) + '</button>').join('') + '</div>'
     + '<div class="gprev">' + prev.map((e) => '<div><b class="hd">' + esc(epLabel(e)) + '</b>' + esc(titleOf(e)) + '</div>').join('')
     + (items.length > 3 ? '<div class="note">還有 ' + (items.length - 3) + ' 集…</div>' : '') + '</div>'

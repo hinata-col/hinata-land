@@ -159,7 +159,7 @@ function cmtDrawer(e, kp) {
     if (!cs) { h += '<div style="font-size:14px">讀取中…</div>'; }
     else if (!cs.length) { h += '<div style="font-size:14px">還沒有人留言，來當第一個分享看點的人吧。</div>'; }
     else {
-      h += cs.map((c) => '<div class="cmt"><div class="cmth"><small>' + esc(c.nick) + '</small>' + (c.uid === S.uid
+      h += cs.map((c) => '<div class="cmt"><div class="cmth"><small>' + esc(c.nick === '匿名おひさま' ? 'おひさま' : c.nick) + '</small>' + (c.uid === S.uid
         ? '<button type="button" class="rpt" data-act="delCmt" data-arg="' + e.key + '|' + c.id + '">刪除</button>'
         : '<button type="button" class="rpt" data-act="report" data-arg="' + c.id + '">檢舉</button>') + '</div>' + esc(c.text) + '</div>').join('');
     }

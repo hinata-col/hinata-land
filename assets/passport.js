@@ -81,7 +81,7 @@ async function renderFavs() {
   box.innerHTML = '<div class="favg">' + S.favs.map((id) => {
     const l = favCache[id];
     if (!l) { return '<div class="card favc"><div><h3 class="hd">這份清單已經被作者刪除</h3></div><div class="gacts"><button type="button" class="btn" data-act="unfav" data-arg="' + esc(id) + '">從收藏移除</button></div></div>'; }
-    return '<div class="card favc"><div><h3 class="hd">' + esc(l.name) + '</h3><div class="note">' + esc(l.nick || '') + '　·　' + (l.items || []).length + ' 集</div></div>'
+    return '<div class="card favc"><div><h3 class="hd">' + esc(l.name) + '</h3><div class="note">' + esc(l.nick === '匿名おひさま' ? 'おひさま' : (l.nick || '')) + '　·　' + (l.items || []).length + ' 集</div></div>'
       + '<div class="gacts"><a class="btn pri" href="/list?l=' + esc(id) + '">看這份清單</a><button type="button" class="btn" data-act="unfav" data-arg="' + esc(id) + '">取消收藏</button></div></div>';
   }).join('') + '</div>';
 }
