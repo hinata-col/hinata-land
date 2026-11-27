@@ -2,7 +2,7 @@
 import {
   S, AREAS, AREA_PREFIX, setting, init, dataReady, onChange, header, footer, esc, $, bind, toast, titleOf, epLabel,
   setSeen, loadStats, likesOf, addsOf, cmtsOf, toggleLike, toggleInList, createList,
-  loadComments, loadAllComments, addComment, deleteComment, openReport, openNick
+  loadComments, loadAllComments, addComment, setNote, deleteComment, openReport, openNick
 } from './app.js';
 
 const AREA = document.body.getAttribute('data-area');
@@ -32,7 +32,7 @@ const TEXT = {
 }[AREA];
 
 const urlList = new URLSearchParams(location.search).get('list') || '';
-const F = { mopen: '', q: '', range: '', cat: '全部', status: '全部', sortBy: '集數', sortDir: 'asc', limit: 20, openSeries: '', allSeries: false, help: false, pop: '', open: '', listFilter: urlList };
+const F = { note: '', mopen: '', q: '', range: '', cat: '全部', status: '全部', sortBy: '集數', sortDir: 'asc', limit: 20, openSeries: '', allSeries: false, help: false, pop: '', open: '', listFilter: urlList };
 const tint = ['#FFB3AB', '#FFE08A', '#A8EBE2', '#CFC4FF', '#FFC2D6', '#BFE0FF'];
 let ALL = [], maxN = 0, lastDate = '', ranges = [], SER = [];
 
@@ -148,7 +148,7 @@ function filtered() {
   let base;
   if (q) {
     const num = q.replace(/^#/, '');
-    base = /^\d+(\.5)?$/.test(num) ? ALL.filter((e) => e.id === num || e.id === num + '.5') : ALL.filter((e) => (e.zh + ' ' + e.jp).toLowerCase().indexOf(q) !== -1 || !!cmtHit(e, q));
+    base = /^\d+(\.5)?$/.test(num) ? ALL.filter((e) => e.id === num || e.id === num + '.5') : ALL.filter((e) => (e.zh + ' ' + e.jp + ' ' + (S.notes[e.key] || '')).toLowerCase().indexOf(q) !== -1 || !!cmtHit(e, q));
   } else {
     const rg = ranges.filter((x) => x[0] === F.range)[0] || ranges[ranges.length - 1];
     base = ALL.filter((e) => e.n >= rg[1] && e.n <= rg[2] + 0.9);
@@ -188,11 +188,13 @@ function rowHtml(e) {
     + '<div class="ra"><span class="ep hd">#' + esc(e.id) + '</span><span class="date">' + esc(e.date || '特別篇') + '</span></div>'
     + '<div class="rs"><button type="button" class="seen" data-act="seen" data-arg="' + e.key + '" aria-pressed="' + seen + '" aria-label="第 ' + esc(e.id) + ' 回 標記為看過">' + (seen ? '☑ 看過' : '☐ 看過') + '</button></div>'
     + '<div class="rb"><div class="tt">' + esc(titleOf(e)) + '</div>' + (e.jp && e.zh ? '<div class="jp" lang="ja">' + esc(e.jp) + '</div>' : '')
+    + (S.notes[e.key] ? '<div class="mynote">📝 ' + esc(S.notes[e.key].length > 60 ? S.notes[e.key].slice(0, 60) + '…' : S.notes[e.key]) + '</div>' : '')
     + (function () { const q = F.q.trim().toLowerCase(); const c = cmtHit(e, q); return c ? '<div class="chit">💬 ' + esc(snippet(String(c.text), q)) + '</div>' : ''; })() + '</div>'
     + '<div class="rc">' + e.tags.map((t) => '<span class="chip" style="background:' + S.tagColor[t] + '">' + esc(t) + '</span>').join('') + '</div>'
     + '<div class="rd"><button type="button" class="btn act" data-act="like" data-arg="' + e.key + '" aria-pressed="' + liked + '">' + (liked ? '♥ 讚 ' : '♡ 讚 ') + likesOf(e) + '</button>'
     + '<button type="button" class="btn act" data-act="pop" data-arg="' + e.key + '" aria-expanded="' + isPop + '">' + (picked ? '★ 收藏 ' : '☆ 收藏 ') + addsOf(e) + '</button>'
     + '<button type="button" class="btn act" data-act="cmt" data-arg="' + e.key + '" aria-expanded="' + isOpen + '">留言 ' + cmtsOf(e) + '</button>'
+    + '<button type="button" class="btn act" data-act="note" data-arg="' + e.key + '" aria-pressed="' + !!S.notes[e.key] + '" aria-expanded="' + (F.note === e.key) + '">📝 筆記</button>'
     + vlinkHtml(e) + '</div>';
   if (isPop) {
     h += '<div class="drawer" style="background:#FFF1C2"><h4 class="hd">放進哪份清單？（可以多選）</h4><div class="pills">'
@@ -200,6 +202,11 @@ function rowHtml(e) {
       + '</div><form data-form="newList" data-key="' + e.key + '"><label>或是開一份新清單，直接把這集放進去<input name="n" type="text" maxlength="30" data-keep="nl-' + e.key + '" placeholder="清單名稱，例如：新手入門 5 選"></label><button type="submit" class="btn pri">新增並放進去</button></form></div>';
   }
   if (isOpen) { h += cmtDrawer(e, 'c-'); }
+  if (F.note === e.key) {
+    h += '<div class="drawer" style="background:#F3EEFF"><h4 class="hd">我的筆記<small class="nsub">🔒 只有你看得到，可以被搜尋</small></h4>'
+      + '<div><textarea class="ntext" data-note="' + e.key + '" data-keep="n-' + e.key + '" rows="3" maxlength="1000" placeholder="寫下這集的重點、喜歡的片段、時間點…">' + esc(S.notes[e.key] || '') + '</textarea></div>'
+      + '<div class="nfoot"><span class="nstat" data-nstat="' + e.key + '">' + (S.notes[e.key] ? '✓ 已儲存' : '打完字會自動儲存') + '</span><button type="button" class="lnk" data-act="noteDel" data-arg="' + e.key + '">刪除筆記</button></div></div>';
+  }
   return h + '</article>';
 }
 
@@ -261,6 +268,8 @@ async function main() {
     seen: (k) => setSeen(k, !S.seen[k]),
     like: (k) => toggleLike(byKey(k)),
     pop: (k) => { F.pop = F.pop === k ? '' : k; F.open = ''; renderRows(); },
+    note: (k) => { F.note = F.note === k ? '' : k; F.pop = ''; F.open = ''; renderRows(); const t = document.querySelector('[data-note="' + k + '"]'); if (t) { t.focus(); } },
+    noteDel: async (k) => { const t = document.querySelector('[data-note="' + k + '"]'); if (t) { t.value = ''; } await setNote(k, ''); F.note = ''; renderRows(); toast('筆記已刪除'); },
     mcmt: (k) => { F.mopen = F.mopen === k ? '' : k; renderMust(); if (F.mopen) { loadComments(k); } },
     cmt: (k) => { F.open = F.open === k ? '' : k; F.pop = ''; renderRows(); if (F.open) { loadComments(k); } },
     inList: (arg) => { const p = arg.split('|'); toggleInList(p[0], p[1]); },
@@ -285,6 +294,18 @@ async function main() {
       await createList(v || ('新清單 ' + (S.lists.length + 1)), [e.key]);
       toast('已新增清單並放進這一集');
     }
+  });
+  const noteTimers = {};
+  root.addEventListener('input', (ev) => {
+    const t = ev.target.closest && ev.target.closest('[data-note]'); if (!t) { return; }
+    const k = t.getAttribute('data-note'); const st = document.querySelector('[data-nstat="' + k + '"]');
+    if (st) { st.textContent = '輸入中…'; }
+    clearTimeout(noteTimers[k]);
+    noteTimers[k] = setTimeout(async () => {
+      const had = !!S.notes[k];
+      try { await setNote(k, t.value); if (st) { st.textContent = '✓ 已自動儲存'; } } catch (err) { console.error(err); if (st) { st.textContent = '沒有存成功，請再打一個字試試'; } }
+      if (had !== !!S.notes[k]) { renderRows(); }
+    }, 800);
   });
   $('#fSearch').addEventListener('input', (ev) => { F.q = ev.target.value; F.limit = 20; renderRows(); if (F.q.trim() && !/^#?\d/.test(F.q.trim())) { loadAllComments(); } });
   $('#fRange').addEventListener('change', (ev) => { F.range = ev.target.value; F.limit = 20; renderRows(); });

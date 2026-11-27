@@ -32,7 +32,7 @@ service cloud.firestore {
     match /users/{uid} {
       allow read, delete: if signedIn() && me() == uid;
       allow create, update: if signedIn() && me() == uid
-        && request.resource.data.keys().hasOnly(['nick', 'seen', 'favs', 'at'])
+        && request.resource.data.keys().hasOnly(['nick', 'seen', 'favs', 'notes', 'at'])
         && request.resource.data.get('nick', '') is string
         && request.resource.data.get('nick', '').size() <= 16
         && request.resource.data.get('favs', []).size() <= 500;

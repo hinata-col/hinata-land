@@ -24,7 +24,7 @@ export const $ = (sel, root) => (root || document).querySelector(sel);
 // ── 狀態 ──────────────────────────────────────────
 export const S = {
   ready: false, uid: '', isAnon: true, nick: DEFAULT_NICK,
-  seen: {}, favs: [], liked: {}, links: {}, lists: [], stats: {}, comments: {},
+  seen: {}, favs: [], liked: {}, links: {}, notes: {}, lists: [], stats: {}, comments: {},
   eps: { R: [], H: [], M: [] }, byKey: {}, series: [], tagColor: {}, updated: ''
 };
 const subs = [];
@@ -72,6 +72,7 @@ async function loadUser() {
   if (S.nick === OLD_DEFAULT_NICK) { S.nick = DEFAULT_NICK; fb.update('users/' + S.uid, { nick: DEFAULT_NICK }).catch(() => {}); }
   S.seen = u.seen || {};
   S.favs = u.favs || [];
+  S.notes = u.notes || {};
   const [mine, likes] = await Promise.all([fb.where('lists', 'owner', S.uid), fb.where('likes', 'uid', S.uid)]);
   S.lists = mine.sort((x, y) => (tsOf(x.at) - tsOf(y.at)));
   S.lists.forEach((l) => { if (l.nick === OLD_DEFAULT_NICK) { l.nick = DEFAULT_NICK; fb.update('lists/' + l.id, { nick: DEFAULT_NICK }).catch(() => {}); } });
@@ -117,6 +118,14 @@ export async function setSeen(key, on) {
   await fb.update('users/' + S.uid, { ['seen.' + key]: on ? true : fb.delField() });
 }
 export const seenIn = (area) => S.eps[area].filter((e) => S.seen[e.key]).length;
+
+// ── 私人筆記（存在自己的使用者資料裡，只有自己讀得到）──
+export async function setNote(key, text) {
+  if (notReady()) { return; }
+  const t = String(text || '').slice(0, 1000);
+  if (t.trim()) { S.notes[key] = t; } else { delete S.notes[key]; }
+  await fb.update('users/' + S.uid, { ['notes.' + key]: t.trim() ? t : fb.delField() });
+}
 
 // ── 統計（讚、收藏數、留言數）────────────────────
 export async function loadStats(area) {
@@ -269,7 +278,7 @@ export async function setNick(n) {
   for (const l of S.lists) { await fb.update('lists/' + l.id, { nick: v }).catch(() => {}); }
 }
 export async function login() {
-  const before = { seen: Object.assign({}, S.seen), favs: S.favs.slice(), lists: S.lists.slice(), nick: S.nick };
+  const before = { notes: Object.assign({}, S.notes), seen: Object.assign({}, S.seen), favs: S.favs.slice(), lists: S.lists.slice(), nick: S.nick };
   let res;
   try { res = await fb.googleLogin(); } catch (e) {
     if (e && (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request')) { return false; }
@@ -282,6 +291,7 @@ export async function login() {
     const seenAdd = {};
     Object.keys(before.seen).forEach((k) => { if (!S.seen[k]) { seenAdd['seen.' + k] = true; S.seen[k] = true; } });
     const favAdd = before.favs.filter((f) => S.favs.indexOf(f) < 0);
+    Object.keys(before.notes).forEach((k) => { if (!S.notes[k]) { seenAdd['notes.' + k] = before.notes[k]; S.notes[k] = before.notes[k]; } });
     if (Object.keys(seenAdd).length) { await fb.update('users/' + S.uid, seenAdd); }
     for (const f of favAdd) { await fb.update('users/' + S.uid, { favs: fb.arrAdd(f) }); S.favs.push(f); }
     if (S.nick === DEFAULT_NICK && before.nick !== DEFAULT_NICK) { await setNick(before.nick); }
