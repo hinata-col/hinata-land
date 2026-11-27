@@ -55,7 +55,7 @@ async function loadData() {
       const tags = String(x[4] || '').split(/[,、，]\s*/).map((t) => t.trim()).filter(Boolean)
         .sort((p, q) => S.series.indexOf(p) - S.series.indexOf(q));
       tags.forEach((t) => { if (!S.tagColor[t]) { S.tagColor[t] = PAL[Object.keys(S.tagColor).length % PAL.length]; } });
-      const e = { area: a, id: id, n: parseFloat(id), date: x[1] || '', jp: x[2] || '', zh: x[3] || '', tags: tags, key: keyOf(a, id) };
+      const e = { area: a, id: id, n: parseFloat(id), date: x[1] || '', jp: x[2] || '', zh: x[3] || '', syn: x[5] || '', tags: tags, key: keyOf(a, id) };
       S.byKey[e.key] = e;
       return e;
     });

@@ -32,7 +32,7 @@ const TEXT = {
 }[AREA];
 
 const urlList = new URLSearchParams(location.search).get('list') || '';
-const F = { note: '', mopen: '', q: '', range: '', cat: '全部', status: '全部', sortBy: '集數', sortDir: 'asc', limit: 20, openSeries: '', allSeries: false, help: false, pop: '', open: '', listFilter: urlList };
+const F = { syn: '', note: '', mopen: '', q: '', range: '', cat: '全部', status: '全部', sortBy: '集數', sortDir: 'asc', limit: 20, openSeries: '', allSeries: false, help: false, pop: '', open: '', listFilter: urlList };
 const tint = ['#FFB3AB', '#FFE08A', '#A8EBE2', '#CFC4FF', '#FFC2D6', '#BFE0FF'];
 let ALL = [], maxN = 0, lastDate = '', ranges = [], SER = [];
 
@@ -148,7 +148,7 @@ function filtered() {
   let base;
   if (q) {
     const num = q.replace(/^#/, '');
-    base = /^\d+(\.5)?$/.test(num) ? ALL.filter((e) => e.id === num || e.id === num + '.5') : ALL.filter((e) => (e.zh + ' ' + e.jp + ' ' + (S.notes[e.key] || '')).toLowerCase().indexOf(q) !== -1 || !!cmtHit(e, q));
+    base = /^\d+(\.5)?$/.test(num) ? ALL.filter((e) => e.id === num || e.id === num + '.5') : ALL.filter((e) => (e.zh + ' ' + e.jp + ' ' + e.syn + ' ' + (S.notes[e.key] || '')).toLowerCase().indexOf(q) !== -1 || !!cmtHit(e, q));
   } else {
     const rg = ranges.filter((x) => x[0] === F.range)[0] || ranges[ranges.length - 1];
     base = ALL.filter((e) => e.n >= rg[1] && e.n <= rg[2] + 0.9);
@@ -188,6 +188,7 @@ function rowHtml(e) {
     + '<div class="ra"><span class="ep hd">#' + esc(e.id) + '</span><span class="date">' + esc(e.date || '特別篇') + '</span></div>'
     + '<div class="rs"><button type="button" class="seen" data-act="seen" data-arg="' + e.key + '" aria-pressed="' + seen + '" aria-label="第 ' + esc(e.id) + ' 回 標記為看過">' + (seen ? '☑ 看過' : '☐ 看過') + '</button></div>'
     + '<div class="rb"><div class="tt">' + esc(titleOf(e)) + '</div>' + (e.jp && e.zh ? '<div class="jp" lang="ja">' + esc(e.jp) + '</div>' : '')
+    + (e.syn ? '<div class="syn' + (F.syn === e.key ? ' open' : '') + '">' + esc(e.syn) + '</div><button type="button" class="lnk synt" data-act="syn" data-arg="' + e.key + '">' + (F.syn === e.key ? '收起簡介' : '看完整簡介') + '</button>' : '')
     + (S.notes[e.key] ? '<div class="mynote">📝 ' + esc(S.notes[e.key].length > 60 ? S.notes[e.key].slice(0, 60) + '…' : S.notes[e.key]) + '</div>' : '')
     + (function () { const q = F.q.trim().toLowerCase(); const c = cmtHit(e, q); return c ? '<div class="chit">💬 ' + esc(snippet(String(c.text), q)) + '</div>' : ''; })() + '</div>'
     + '<div class="rc">' + e.tags.map((t) => '<span class="chip" style="background:' + S.tagColor[t] + '">' + esc(t) + '</span>').join('') + '</div>'
@@ -268,6 +269,7 @@ async function main() {
     seen: (k) => setSeen(k, !S.seen[k]),
     like: (k) => toggleLike(byKey(k)),
     pop: (k) => { F.pop = F.pop === k ? '' : k; F.open = ''; renderRows(); },
+    syn: (k) => { F.syn = F.syn === k ? '' : k; renderRows(); },
     note: (k) => { F.note = F.note === k ? '' : k; F.pop = ''; F.open = ''; renderRows(); const t = document.querySelector('[data-note="' + k + '"]'); if (t) { t.focus(); } },
     noteDel: async (k) => { const t = document.querySelector('[data-note="' + k + '"]'); if (t) { t.value = ''; } await setNote(k, ''); F.note = ''; renderRows(); toast('筆記已刪除'); },
     mcmt: (k) => { F.mopen = F.mopen === k ? '' : k; renderMust(); if (F.mopen) { loadComments(k); } },

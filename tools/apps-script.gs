@@ -136,7 +136,10 @@ function buildData_() {
       if (/^（?標題未查到）?$|^待補$/.test(jp)) jp = '';
       const zh = clean(v[i][col('中文標題')]);
       const tags = clean(v[i][col('系列')]).split(/\s*[,、，]\s*/).filter(String).join(',');
-      rows.push([id, clean(v[i][col('播出日')]), jp, zh, tags]);
+      const row = [id, clean(v[i][col('播出日')]), jp, zh, tags];
+      const syn = col('中文簡介') >= 0 ? clean(v[i][col('中文簡介')]) : '';
+      if (syn) row.push(syn); // 有中文簡介才放第 6 欄
+      rows.push(row);
     }
     rows.sort(function (x, y) { return parseFloat(x[0]) - parseFloat(y[0]); });
     areas[a] = rows;
