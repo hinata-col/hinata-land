@@ -327,7 +327,21 @@ export function header(page, area) {
   document.addEventListener('click', (ev) => { const d = $('.ghd'); if (d && d.open && !d.contains(ev.target)) { d.open = false; } });
 }
 export const FOOTER = '日向坂樂園是粉絲自製的非官方看點導覽，只整理集數與推薦，不提供任何影片，與節目及相關單位無關。節目內容請以テレビ東京與 Lemino 的官方資訊為準。';
-export function footer() { const f = $('#ftr'); if (f) { f.textContent = FOOTER; } }
+export const OFFICIAL = [
+  ['日向坂46 官方網站', 'https://www.hinatazaka46.com/'],
+  ['日會 官網節目介紹', 'https://www.hinatazaka46.com/s/official/diary/aimashou/list?ima=0000&link=ROBO004'],
+  ['東京電視台 日會', 'https://www.tv-tokyo.co.jp/hinatazaka/'],
+  ['Lemino 日向坂46', 'https://lemino.docomo.ne.jp/ft/0000013']
+];
+export function footer(links) {
+  const f = $('#ftr'); if (!f) return;
+  f.textContent = FOOTER;
+  if (!links) return;
+  const d = document.createElement('div'); d.className = 'olinks';
+  const t = document.createElement('span'); t.textContent = '官方相關連結'; d.appendChild(t);
+  OFFICIAL.forEach(o => { const a = document.createElement('a'); a.href = o[1]; a.target = '_blank'; a.rel = 'noopener'; a.textContent = o[0]; d.appendChild(a); });
+  f.appendChild(d);
+}
 
 let toastTimer = null;
 export function toast(msg, ms) {

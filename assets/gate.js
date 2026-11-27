@@ -18,6 +18,6 @@ function render() {
       + '<span class="go">剪票入園 →</span></div></div></a>';
   }).join('');
 }
-header('gate'); footer();
+header('gate'); footer(true);
 dataReady().then(render);
 init().then(() => { render(); onChange(render); });
