@@ -63,10 +63,8 @@ function renderEditor() {
     + LTAGS.map((t) => '<button type="button" class="btn tpb" data-act="tag" data-arg="' + t + '" aria-pressed="' + ((l.tags || []).indexOf(t) >= 0) + '">#' + t + '</button>').join('') + '</div></div>';
   $('#edHead').innerHTML = '<div class="ed-top"><span style="font-size:14px;font-weight:900">清單內容（' + l.items.length + ' 集）</span><button type="button" class="btn" data-act="sortEp">依集數排序</button></div>';
   $('#edItems').innerHTML = itemsHtml(l);
-  const firstArea = (l.items.map((k) => S.byKey[k]).filter(Boolean)[0] || { area: OPEN[0] }).area;
   $('#edShare').innerHTML = '<label class="share">分享連結<input type="text" value="' + esc(shareLink(l.id)) + '" readonly></label><div class="ed-acts">'
     + '<button type="button" class="btn pri" data-act="copy">複製連結</button><a class="btn" href="/list?l=' + l.id + '">看看朋友打開的樣子</a>'
-    + (l.items.length ? '<a class="btn" href="' + AREAS[firstArea].page + '?list=' + l.id + '">在園區地圖只顯示這份清單</a>' : '')
     + '<button type="button" class="btn ghost" data-act="del">刪除這份清單</button></div>';
 }
 
