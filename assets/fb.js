@@ -49,6 +49,10 @@ export const fb = {
   del(path) { return deleteDoc(ref(path)); },
   async add(coll, data) { const r = await addDoc(collection(db, coll), data); return r.id; },
   newId(coll) { return doc(collection(db, coll)).id; },
+  async all(coll) {
+    const s = await getDocs(collection(db, coll));
+    return s.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+  },
   async where(coll, field, value) {
     const s = await getDocs(query(collection(db, coll), where(field, '==', value)));
     return s.docs.map((d) => Object.assign({ id: d.id }, d.data()));

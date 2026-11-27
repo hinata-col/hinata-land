@@ -224,6 +224,20 @@ export async function loadComments(key) {
   S.comments[key] = rows.sort((x, y) => tsOf(x.at) - tsOf(y.at));
   emit();
 }
+// 一次讀進全部留言（搜尋留言用）
+let allCmtsP = null;
+export function loadAllComments() {
+  if (!allCmtsP) {
+    allCmtsP = fb.all('comments').then((rows) => {
+      const g = {};
+      rows.forEach((c) => { (g[c.ep] = g[c.ep] || []).push(c); });
+      Object.keys(g).forEach((k) => { if (!S.comments[k]) { S.comments[k] = g[k].sort((x, y) => tsOf(x.at) - tsOf(y.at)); } });
+      S.allComments = true;
+      emit();
+    }).catch((err) => { console.error(err); allCmtsP = null; });
+  }
+  return allCmtsP;
+}
 export async function addComment(e, text) {
   if (notReady()) { return; }
   const t = String(text).trim().slice(0, 140); if (!t) { return; }

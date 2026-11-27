@@ -2,7 +2,7 @@
 import {
   S, AREAS, AREA_PREFIX, setting, init, dataReady, onChange, header, footer, esc, $, bind, toast, titleOf, epLabel,
   setSeen, loadStats, likesOf, addsOf, cmtsOf, toggleLike, toggleInList, createList,
-  loadComments, addComment, deleteComment, openReport, openNick
+  loadComments, loadAllComments, addComment, deleteComment, openReport, openNick
 } from './app.js';
 
 const AREA = document.body.getAttribute('data-area');
@@ -132,12 +132,23 @@ function renderFilters() {
   $('#fDir').setAttribute('aria-label', '排序方向，目前' + dl.slice(2));
 }
 
+// 搜尋時，留言裡有關鍵字的那一則
+function cmtHit(e, q) {
+  if (!q || /^#?\d+(\.5)?$/.test(q)) { return null; }
+  const c = (S.comments[e.key] || []).filter((x) => String(x.text).toLowerCase().indexOf(q) !== -1);
+  return c.length ? c[c.length - 1] : null;
+}
+function snippet(t, q) {
+  const i = t.toLowerCase().indexOf(q); const a = Math.max(0, i - 18);
+  return (a > 0 ? '…' : '') + t.slice(a, i + q.length + 30) + (i + q.length + 30 < t.length ? '…' : '');
+}
+
 function filtered() {
   const q = F.q.trim().toLowerCase();
   let base;
   if (q) {
     const num = q.replace(/^#/, '');
-    base = /^\d+(\.5)?$/.test(num) ? ALL.filter((e) => e.id === num || e.id === num + '.5') : ALL.filter((e) => (e.zh + ' ' + e.jp).toLowerCase().indexOf(q) !== -1);
+    base = /^\d+(\.5)?$/.test(num) ? ALL.filter((e) => e.id === num || e.id === num + '.5') : ALL.filter((e) => (e.zh + ' ' + e.jp).toLowerCase().indexOf(q) !== -1 || !!cmtHit(e, q));
   } else {
     const rg = ranges.filter((x) => x[0] === F.range)[0] || ranges[ranges.length - 1];
     base = ALL.filter((e) => e.n >= rg[1] && e.n <= rg[2] + 0.9);
@@ -176,7 +187,8 @@ function rowHtml(e) {
   let h = '<article class="row" style="background:' + (seen ? '#EFFBF4' : '#FFFFFF') + '">'
     + '<div class="ra"><span class="ep hd">#' + esc(e.id) + '</span><span class="date">' + esc(e.date || '特別篇') + '</span></div>'
     + '<div class="rs"><button type="button" class="seen" data-act="seen" data-arg="' + e.key + '" aria-pressed="' + seen + '" aria-label="第 ' + esc(e.id) + ' 回 標記為看過">' + (seen ? '☑ 看過' : '☐ 看過') + '</button></div>'
-    + '<div class="rb"><div class="tt">' + esc(titleOf(e)) + '</div>' + (e.jp && e.zh ? '<div class="jp" lang="ja">' + esc(e.jp) + '</div>' : '') + '</div>'
+    + '<div class="rb"><div class="tt">' + esc(titleOf(e)) + '</div>' + (e.jp && e.zh ? '<div class="jp" lang="ja">' + esc(e.jp) + '</div>' : '')
+    + (function () { const q = F.q.trim().toLowerCase(); const c = cmtHit(e, q); return c ? '<div class="chit">💬 ' + esc(snippet(String(c.text), q)) + '</div>' : ''; })() + '</div>'
     + '<div class="rc">' + e.tags.map((t) => '<span class="chip" style="background:' + S.tagColor[t] + '">' + esc(t) + '</span>').join('') + '</div>'
     + '<div class="rd"><button type="button" class="btn act" data-act="like" data-arg="' + e.key + '" aria-pressed="' + liked + '">' + (liked ? '♥ 讚 ' : '♡ 讚 ') + likesOf(e) + '</button>'
     + '<button type="button" class="btn act" data-act="pop" data-arg="' + e.key + '" aria-expanded="' + isPop + '">' + (picked ? '★ 收藏 ' : '☆ 收藏 ') + addsOf(e) + '</button>'
@@ -274,7 +286,7 @@ async function main() {
       toast('已新增清單並放進這一集');
     }
   });
-  $('#fSearch').addEventListener('input', (ev) => { F.q = ev.target.value; F.limit = 20; renderRows(); });
+  $('#fSearch').addEventListener('input', (ev) => { F.q = ev.target.value; F.limit = 20; renderRows(); if (F.q.trim() && !/^#?\d/.test(F.q.trim())) { loadAllComments(); } });
   $('#fRange').addEventListener('change', (ev) => { F.range = ev.target.value; F.limit = 20; renderRows(); });
   $('#fCat').addEventListener('change', (ev) => { F.cat = ev.target.value; F.limit = 20; renderRows(); });
   $('#fStatus').addEventListener('change', (ev) => { F.status = ev.target.value; F.limit = 20; renderRows(); });
