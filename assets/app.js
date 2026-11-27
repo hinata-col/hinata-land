@@ -9,6 +9,10 @@ export const AREAS = {
   M: { key: 'M', name: '還沒結束！在日向坂相會', jp: 'まだまだ！日向坂で会いましょう', short: 'まだひな', color: '#D3F1FB', ink: '#1B8FB0', page: '/madahina', logo: '/assets/logo-madahina.webp', no: 'No.03', years: '2026–', desc: 'Lemino 獨家，和本篇連動的衍生節目。' }
 };
 export const OPEN = ['R', 'H', 'M'].filter((a) => OPEN_AREAS.indexOf(a) >= 0);
+export const AREA_PREFIX = { R: '平假名推', H: '日會', M: 'まだひな' };
+export const SETTINGS = {};
+// 試算表「網站設定」分頁的文字（沒填就用預設）
+export const setting = (key, def) => (SETTINGS[key] && String(SETTINGS[key]).trim()) || def;
 export const PAL = ['#FFB3AB', '#FFC2D6', '#BFE0FF', '#C8F0B0', '#FFD9A8', '#FFE08A', '#A8EBE2', '#CFC4FF', '#F7C9F0', '#D5F0FF'];
 export const LTAGS = ['新手入門', '爆笑', '感動', '外景', '系列企劃', '成員推', '冷門寶藏'];
 export const DEFAULT_NICK = '匿名おひさま';
@@ -34,6 +38,14 @@ async function loadData() {
   const r = await fetch('/data/episodes.json', { cache: 'no-cache' });
   const d = await r.json();
   S.updated = d.updated || '';
+  Object.assign(SETTINGS, d.settings || {});
+  const openKeys = ['R', 'H', 'M'].filter((a) => ('開放：' + AREAS[a].name) in SETTINGS);
+  if (openKeys.length) {
+    const open = ['R', 'H', 'M'].filter((a) => String(SETTINGS['開放：' + AREAS[a].name]).toUpperCase() === 'TRUE');
+    OPEN.splice(0, OPEN.length, ...open);
+  }
+  ['R', 'H', 'M'].forEach((a) => { AREAS[a].desc = setting(AREA_PREFIX[a] + '：大門票券短說明', AREAS[a].desc); });
+  if (lastHeader) { header(lastHeader[0], lastHeader[1]); }
   S.series = d.series || [];
   S.series.forEach((t, i) => { S.tagColor[t] = PAL[i % PAL.length]; });
   ['R', 'H', 'M'].forEach((a) => {
@@ -272,7 +284,10 @@ export async function logout() {
 
 // ── 畫面元件 ──────────────────────────────────────
 const BUNTING = '<svg class="bunting" aria-hidden="true" width="100%" height="36" style="display:block" preserveAspectRatio="none"><defs><pattern id="flags" width="240" height="36" patternUnits="userSpaceOnUse"><path d="M0 0H240" stroke="#1F2A5A" stroke-width="4"/><polygon points="6,2 54,2 30,32" fill="#FF6B5E" stroke="#1F2A5A" stroke-width="3" stroke-linejoin="round"/><polygon points="66,2 114,2 90,32" fill="#FFC83D" stroke="#1F2A5A" stroke-width="3" stroke-linejoin="round"/><polygon points="126,2 174,2 150,32" fill="#2EC4B6" stroke="#1F2A5A" stroke-width="3" stroke-linejoin="round"/><polygon points="186,2 234,2 210,32" fill="#7B5CFF" stroke="#1F2A5A" stroke-width="3" stroke-linejoin="round"/></pattern></defs><rect width="100%" height="36" fill="url(#flags)"/></svg>';
+let lastHeader = null;
+let headerBound = false;
 export function header(page, area) {
+  lastHeader = [page, area];
   const items = OPEN.map((a) => { const A = AREAS[a]; return '<a href="' + A.page + '"' + (area === a ? ' aria-current="page"' : '') + '><span class="dot" style="background:' + A.color + '"></span><span class="mn">' + A.name + '<small lang="ja">' + A.jp + '</small></span></a>'; }).join('');
   let h = '<header class="gh' + (area ? ' area' : '') + '"><div class="gh1"><a class="brand hd" href="/">日向坂樂園</a>'
     + '<details class="ghd"><summary class="hd">園區 <span class="car" aria-hidden="true">▾</span></summary><nav class="ghm" aria-label="園區">' + items + '</nav></details>'
@@ -280,6 +295,8 @@ export function header(page, area) {
   if (area) { h += '<nav class="ghs" aria-label="本園區"><a href="#paths">遊玩路線</a><a href="#must">人氣設施</a><a href="#series">主題園區</a><a href="#all">園區地圖</a></nav>'; }
   h += '</header>' + BUNTING;
   $('#hdr').innerHTML = h;
+  if (headerBound) { return; }
+  headerBound = true;
   document.addEventListener('click', (ev) => { const d = $('.ghd'); if (d && d.open && !d.contains(ev.target)) { d.open = false; } });
 }
 export const FOOTER = '日向坂樂園是粉絲自製的非官方看點導覽，只整理集數與推薦，不提供任何影片，與節目及相關單位無關。節目內容請以テレビ東京與 Lemino 的官方資訊為準。';

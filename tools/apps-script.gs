@@ -12,6 +12,8 @@ const BRANCH = 'main';
 const FILE_PATH = 'data/episodes.json';
 const TABS = { R: 'ひらがな推し', H: '日向坂で会いましょう', M: 'まだひな' };
 const SERIES_TAB = '系列清單';
+const SETTINGS_TAB = '網站設定';        // A 欄設定項目、B 欄內容
+const REPORTS_TAB = '檢舉';
 const FRIENDS_TAB = '朋友名單';          // A 欄填朋友的 Gmail（第一列是標題）
 const LINK_HEADER = '收看連結';          // 各分頁裡放影片連結的欄位標題
 const FIREBASE_PROJECT = 'hinata-land';
@@ -21,6 +23,10 @@ function onOpen() {
     .addItem('更新網站資料', 'publishSite')
     .addItem('只重新部署網站', 'deployOnly')
     .addItem('只同步影片連結與朋友名單', 'syncPrivateMenu')
+    .addSeparator()
+    .addItem('改系列名稱（三個分頁一起改）', 'renameSeries')
+    .addItem('讀取檢舉', 'loadReports')
+    .addItem('處理檢舉（依「處理方式」欄執行）', 'handleReports')
     .addSeparator()
     .addItem('設定 GitHub 金鑰', 'setToken')
     .addItem('設定 Cloudflare 部署連結', 'setHook')
@@ -145,8 +151,15 @@ function buildData_() {
   Object.keys(areas).forEach(function (a) {
     areas[a].forEach(function (r) { r[4].split(',').filter(String).forEach(function (t) { if (series.indexOf(t) < 0) { series.push(t); warn.push('系列「' + t + '」不在「' + SERIES_TAB + '」裡，先排在最後'); } }); });
   });
+  const settings = {};
+  const sst = ss.getSheetByName(SETTINGS_TAB);
+  if (sst && sst.getLastRow() > 1) {
+    sst.getRange(2, 1, sst.getLastRow() - 1, 2).getDisplayValues().forEach(function (r) {
+      const k = String(r[0]).trim(); if (k) settings[k] = String(r[1]).trim();
+    });
+  }
   const tz = Session.getScriptTimeZone() || 'Asia/Taipei';
-  return { data: { updated: Utilities.formatDate(new Date(), tz, "yyyy-MM-dd'T'HH:mm:ssXXX"), series: series, areas: areas }, warn: warn };
+  return { data: { updated: Utilities.formatDate(new Date(), tz, "yyyy-MM-dd'T'HH:mm:ssXXX"), series: series, areas: areas, settings: settings }, warn: warn };
 }
 
 function publishSite() {
@@ -182,4 +195,115 @@ function publishSite() {
   } else {
     ui.alert('更新失敗（' + p.getResponseCode() + '）：\n' + p.getContentText().slice(0, 400));
   }
+}
+
+
+// ── 改系列名稱：系列清單和三個分頁的系列欄一起改；新名稱留空就是刪掉這個系列 ──
+function renameSeries() {
+  const ui = SpreadsheetApp.getUi();
+  const a = ui.prompt('改系列名稱', '舊的系列名稱（要一字不差）', ui.ButtonSet.OK_CANCEL);
+  if (a.getSelectedButton() !== ui.Button.OK) return;
+  const oldName = a.getResponseText().trim(); if (!oldName) return;
+  const b = ui.prompt('改系列名稱', '新的系列名稱\n（留空＝把「' + oldName + '」從所有集數和系列清單刪掉）', ui.ButtonSet.OK_CANCEL);
+  if (b.getSelectedButton() !== ui.Button.OK) return;
+  const newName = b.getResponseText().trim();
+  const ss = SpreadsheetApp.getActive();
+  let n = 0;
+  Object.keys(TABS).forEach(function (k) {
+    const sh = ss.getSheetByName(TABS[k]); if (!sh || sh.getLastRow() < 2) return;
+    const head = sh.getRange(1, 1, 1, sh.getLastColumn()).getDisplayValues()[0].map(function (h) { return String(h).trim(); });
+    const c = head.indexOf('系列'); if (c < 0) return;
+    const rg = sh.getRange(2, c + 1, sh.getLastRow() - 1, 1);
+    const v = rg.getValues();
+    let changed = false;
+    v.forEach(function (row) {
+      const tags = String(row[0]).split(/\s*[,、，]\s*/).filter(String);
+      const i = tags.indexOf(oldName);
+      if (i < 0) return;
+      if (newName) { tags[i] = newName; } else { tags.splice(i, 1); }
+      const out = []; tags.forEach(function (t) { if (out.indexOf(t) < 0) out.push(t); });
+      row[0] = out.join(', '); n++; changed = true;
+    });
+    if (changed) rg.setValues(v);
+  });
+  const st = ss.getSheetByName(SERIES_TAB);
+  if (st && st.getLastRow() > 1) {
+    const rg = st.getRange(2, 1, st.getLastRow() - 1, 1); const v = rg.getValues();
+    let found = -1; v.forEach(function (r, i) { if (String(r[0]).trim() === oldName) found = i; });
+    if (found >= 0) {
+      if (newName) { st.getRange(found + 2, 1).setValue(newName); } else { st.deleteRow(found + 2); }
+    } else if (newName) { st.appendRow([newName]); }
+  }
+  ui.alert('完成：改了 ' + n + ' 集。\n記得按「更新網站資料」讓網站也換掉。');
+}
+
+// ── 檢舉 ──
+function fsUrl_(path) { return 'https://firestore.googleapis.com/v1/projects/' + FIREBASE_PROJECT + '/databases/(default)/documents' + (path ? '/' + path : ''); }
+function fsReq_(method, url, body) {
+  const opt = { method: method, muteHttpExceptions: true, headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken(), 'x-goog-user-project': FIREBASE_PROJECT } };
+  if (body) { opt.contentType = 'application/json'; opt.payload = JSON.stringify(body); }
+  const r = UrlFetchApp.fetch(url, opt);
+  if (r.getResponseCode() === 404) return null;
+  if (r.getResponseCode() >= 300) throw new Error(r.getResponseCode() + ' ' + r.getContentText().slice(0, 200));
+  const t = r.getContentText(); return t ? JSON.parse(t) : {};
+}
+const fsStr_ = function (f, k) { return f && f[k] ? (f[k].stringValue || f[k].timestampValue || '') : ''; };
+
+function loadReports() {
+  const ui = SpreadsheetApp.getUi();
+  const ss = SpreadsheetApp.getActive();
+  let docs = [];
+  try {
+    let token = '';
+    do {
+      const res = fsReq_('get', fsUrl_('reports') + '?pageSize=300' + (token ? '&pageToken=' + encodeURIComponent(token) : ''));
+      docs = docs.concat((res && res.documents) || []); token = res && res.nextPageToken;
+    } while (token);
+  } catch (e) { ui.alert('讀取失敗：' + e.message); return; }
+  let sh = ss.getSheetByName(REPORTS_TAB);
+  if (!sh) sh = ss.insertSheet(REPORTS_TAB);
+  sh.clear(); sh.getRange('A:Z').clearDataValidations();
+  const head = ['檢舉時間', '原因', '補充說明', '被檢舉的留言', '留言暱稱', '集數', '處理方式', '留言ID', '檢舉ID'];
+  const rows = docs.map(function (d) {
+    const f = d.fields || {}; const cid = fsStr_(f, 'cid');
+    const c = cid ? fsReq_('get', fsUrl_('comments/' + cid)) : null; const cf = c ? c.fields : null;
+    return [fsStr_(f, 'at').replace('T', ' ').slice(0, 16), fsStr_(f, 'why'), fsStr_(f, 'more'),
+      cf ? fsStr_(cf, 'text') : '（留言已經不在了）', cf ? fsStr_(cf, 'nick') : '', cf ? fsStr_(cf, 'ep') : '', '', cid, d.name.split('/').pop()];
+  });
+  sh.getRange(1, 1, 1, head.length).setValues([head]).setFontWeight('bold');
+  if (rows.length) {
+    sh.getRange(2, 1, rows.length, head.length).setValues(rows);
+    sh.getRange(2, 7, rows.length, 1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['刪除留言', '留言沒問題'], true).build());
+  }
+  sh.setFrozenRows(1); sh.activate();
+  ui.alert(rows.length ? '共 ' + rows.length + ' 筆檢舉。\n在「處理方式」欄選「刪除留言」或「留言沒問題」，再按「處理檢舉」。' : '目前沒有檢舉。');
+}
+
+function handleReports() {
+  const ui = SpreadsheetApp.getUi();
+  const sh = SpreadsheetApp.getActive().getSheetByName(REPORTS_TAB);
+  if (!sh || sh.getLastRow() < 2) { ui.alert('沒有檢舉要處理，先按「讀取檢舉」。'); return; }
+  const v = sh.getRange(2, 1, sh.getLastRow() - 1, 9).getDisplayValues();
+  let del = 0, keep = 0; const done = [];
+  try {
+    v.forEach(function (r, i) {
+      const act = r[6], ep = r[5], cid = r[7], rid = r[8];
+      if (act !== '刪除留言' && act !== '留言沒問題') return;
+      if (act === '刪除留言' && cid) {
+        const c = fsReq_('get', fsUrl_('comments/' + cid));
+        if (c) {
+          fsReq_('delete', fsUrl_('comments/' + cid));
+          if (/^[RHM]/.test(ep)) {
+            const dbPath = 'projects/' + FIREBASE_PROJECT + '/databases/(default)/documents';
+            fsReq_('post', 'https://firestore.googleapis.com/v1/' + dbPath + ':commit', { writes: [{ transform: { document: dbPath + '/stats/' + ep.charAt(0), fieldTransforms: [{ fieldPath: 'cmts.' + ep, increment: { integerValue: '-1' } }] } }] });
+          }
+        }
+        del++;
+      } else { keep++; }
+      if (rid) fsReq_('delete', fsUrl_('reports/' + rid));
+      done.push(i + 2);
+    });
+  } catch (e) { ui.alert('處理到一半失敗：' + e.message); }
+  done.reverse().forEach(function (row) { sh.deleteRow(row); });
+  ui.alert('完成：刪除 ' + del + ' 則留言，保留 ' + keep + ' 則。');
 }

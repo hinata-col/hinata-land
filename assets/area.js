@@ -1,6 +1,6 @@
 // 園區頁（平假名推／在日向坂相會／まだひな 共用）
 import {
-  S, AREAS, init, dataReady, onChange, header, footer, esc, $, bind, toast, titleOf, epLabel,
+  S, AREAS, AREA_PREFIX, setting, init, dataReady, onChange, header, footer, esc, $, bind, toast, titleOf, epLabel,
   setSeen, loadStats, likesOf, addsOf, cmtsOf, toggleLike, toggleInList, createList,
   loadComments, addComment, deleteComment, openReport, openNick
 } from './app.js';
@@ -63,7 +63,15 @@ function prepare() {
   }).filter((x) => x.groups.length > 0);
 }
 
+function applySettings() {
+  const pre = AREA_PREFIX[AREA] + '：';
+  TEXT.watch = setting(pre + '園區說明', TEXT.watch);
+  TEXT.p2 = setting(pre + '依系列挑說明', TEXT.p2);
+  TEXT.p3 = setting(pre + '從頭追說明', TEXT.p3);
+}
+
 function renderHero() {
+  applySettings();
   const nameHtml = AREA === 'R'
     ? '<h1 class="hd arname hiraname" aria-label="平假名推"><span style="color:#F2569C">平</span><span style="color:#8A63DE">假</span><span style="color:#3A8CEB">名</span><span style="color:#F2569C">推</span></h1>'
     : '<h1 class="hd arname">' + esc(A.name) + '</h1>';
