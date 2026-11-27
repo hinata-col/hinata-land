@@ -4,7 +4,7 @@ import { OPEN_AREAS, SITE } from './config.js';
 
 export { SITE };
 export const AREAS = {
-  R: { key: 'R', name: '平假名推', jp: 'ひらがな推し', short: '平假名推', color: '#C6EBB0', ink: '#3C8A2E', page: '/hira', logo: '/assets/logo-hiragana.webp', no: 'No.01', years: '2018–2019', desc: '在日向坂相會的前身，當時團名還是平假名櫸坂46。' },
+  R: { key: 'R', name: '平假名推', jp: 'ひらがな推し', short: '平假名推', color: '#C6EBB0', ink: '#3C8A2E', page: '/ganaoshi', logo: '/assets/logo-hiragana.webp', no: 'No.01', years: '2018–2019', desc: '在日向坂相會的前身，當時團名還是平假名櫸坂46。' },
   H: { key: 'H', name: '在日向坂相會', jp: '日向坂で会いましょう', short: '日會', color: '#A9D9F7', ink: '#2F7FC4', page: '/hinaai', logo: '/assets/logo-hinaai.webp', no: 'No.02', years: '2019–', desc: '本篇，每週日深夜播出中。' },
   M: { key: 'M', name: '還沒結束！在日向坂相會', jp: 'まだまだ！日向坂で会いましょう', short: 'まだひな', color: '#D3F1FB', ink: '#1B8FB0', page: '/madahina', logo: '/assets/logo-madahina.webp', no: 'No.03', years: '2026–', desc: 'Lemino 獨家，和本篇連動的衍生節目。' }
 };

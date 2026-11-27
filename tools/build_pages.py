@@ -94,7 +94,7 @@ AREA_BODY = '''<section id="top" class="wrap hero"></section>
 </section>
 <div class="stk" id="stk"></div>
 '''
-for fn, area, title in [('hira.html', 'R', '平假名推'), ('hinaai.html', 'H', '在日向坂相會'), ('madahina.html', 'M', '還沒結束！在日向坂相會')]:
+for fn, area, title in [('ganaoshi.html', 'R', '平假名推'), ('hinaai.html', 'H', '在日向坂相會'), ('madahina.html', 'M', '還沒結束！在日向坂相會')]:
     page(fn, title + ' · 日向坂樂園', AREA_BODY, 'area.js', body_attr=' data-area="%s"' % area)
 
 GATE_BODY = '''<section id="top" class="wrap hero">
