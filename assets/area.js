@@ -222,7 +222,16 @@ function keepInputs(sel, fn) {
   if (keep) { const i = document.querySelector(sel + ' [data-keep="' + keep.k + '"]'); if (i) { i.value = keep.v; i.focus(); try { i.setSelectionRange(keep.s, keep.s); } catch (err) {} } }
 }
 
-function renderRows() { keepInputs('#rows', renderRowsInner); }
+function renderRows() { keepInputs('#rows', renderRowsInner); fitSyn(); }
+// 簡介沒被截斷（兩行內放得下）就不顯示「看完整簡介」
+function fitSyn() {
+  document.querySelectorAll('.syn:not(.open)').forEach((el) => {
+    const t = el.nextElementSibling;
+    if (t && t.classList.contains('synt')) { t.hidden = el.scrollHeight <= el.clientHeight + 1; }
+  });
+}
+let synTimer = 0;
+window.addEventListener('resize', () => { clearTimeout(synTimer); synTimer = setTimeout(fitSyn, 150); });
 function renderRowsInner() {
 
   const list = filtered();
