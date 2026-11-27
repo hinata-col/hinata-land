@@ -9,7 +9,14 @@ HEAD = '''<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>%(title)s</title>
 <meta name="description" content="%(desc)s">
-<meta property="og:title" content="%(title)s">
+<meta property="og:title" content="日向坂樂園｜日向坂46 冠番導覽">
+<meta property="og:site_name" content="日向坂樂園">
+<meta property="og:url" content="https://hinata-land.pages.dev/">
+<meta property="og:image" content="https://hinata-land.pages.dev/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://hinata-land.pages.dev/assets/og.png">
 <meta property="og:description" content="%(desc)s">
 <meta property="og:type" content="website">
 <link rel="icon" href="/assets/favicon.ico" sizes="any">
@@ -30,7 +37,7 @@ TAIL = '''<footer id="ftr"></footer>
 </body>
 </html>
 '''
-DESC = '日向坂46 冠番組的看點導覽：查集數、找系列企劃、記下自己看到哪裡，和其他おひさま分享推薦清單。'
+DESC = '查集數、找系列企劃、記下自己看到哪裡，和其他おひさま分享推薦清單。'
 
 
 def page(fn, title, body, js, extra_css='', body_attr=''):
@@ -107,7 +114,7 @@ GATE_BODY = '''<section id="top" class="wrap hero">
 </div>
 </section>
 '''
-page('index.html', '日向坂樂園｜日向坂46 冠番組看點導覽', GATE_BODY, 'gate.js', extra_css='\n<link rel="stylesheet" href="/assets/gate.css">')
+page('index.html', '日向坂樂園｜日向坂46 冠番導覽', GATE_BODY, 'gate.js', extra_css='\n<link rel="stylesheet" href="/assets/gate.css">')
 
 PASS_BODY = '''<section class="wrap ptop">
 <h1 class="hd ptitle">我的護照</h1>
