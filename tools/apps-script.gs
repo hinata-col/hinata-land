@@ -207,6 +207,20 @@ function renameSeries() {
   const b = ui.prompt('改系列名稱', '新的系列名稱\n（留空＝把「' + oldName + '」從所有集數和系列清單刪掉）', ui.ButtonSet.OK_CANCEL);
   if (b.getSelectedButton() !== ui.Button.OK) return;
   const newName = b.getResponseText().trim();
+  const n = renameInTabs_(oldName, newName);
+  const st = SpreadsheetApp.getActive().getSheetByName(SERIES_TAB);
+  if (st && st.getLastRow() > 1) {
+    const v = st.getRange(2, 1, st.getLastRow() - 1, 1).getValues();
+    let found = -1; v.forEach(function (r, i) { if (String(r[0]).trim() === oldName) found = i; });
+    if (found >= 0) {
+      if (newName) { st.getRange(found + 2, 1).setValue(newName); } else { st.deleteRow(found + 2); }
+    } else if (newName) { st.appendRow([newName]); }
+  }
+  ui.alert('完成：改了 ' + n + ' 集。\n記得按「更新網站資料」讓網站也換掉。');
+}
+
+// 把三個分頁「系列」欄裡的 oldName 換成 newName（newName 空白＝拿掉），回傳改了幾集
+function renameInTabs_(oldName, newName) {
   const ss = SpreadsheetApp.getActive();
   let n = 0;
   Object.keys(TABS).forEach(function (k) {
@@ -226,15 +240,27 @@ function renameSeries() {
     });
     if (changed) rg.setValues(v);
   });
-  const st = ss.getSheetByName(SERIES_TAB);
-  if (st && st.getLastRow() > 1) {
-    const rg = st.getRange(2, 1, st.getLastRow() - 1, 1); const v = rg.getValues();
-    let found = -1; v.forEach(function (r, i) { if (String(r[0]).trim() === oldName) found = i; });
-    if (found >= 0) {
-      if (newName) { st.getRange(found + 2, 1).setValue(newName); } else { st.deleteRow(found + 2); }
-    } else if (newName) { st.appendRow([newName]); }
-  }
-  ui.alert('完成：改了 ' + n + ' 集。\n記得按「更新網站資料」讓網站也換掉。');
+  return n;
+}
+
+// 在「系列清單」直接改名時，自動同步到三個分頁
+function onEdit(e) {
+  try {
+    if (!e || !e.range) return;
+    const sh = e.range.getSheet();
+    if (sh.getName() !== SERIES_TAB || e.range.getColumn() !== 1 || e.range.getRow() < 2) return;
+    if (e.range.getNumRows() !== 1 || e.range.getNumColumns() !== 1) return;
+    const oldName = String(e.oldValue == null ? '' : e.oldValue).trim();
+    const newName = String(e.value == null ? '' : e.value).trim();
+    if (!oldName || oldName === newName) return;
+    const ss = SpreadsheetApp.getActive();
+    if (!newName) {
+      ss.toast('「' + oldName + '」已從系列清單拿掉，但集數上的這個系列還在。要一起拿掉請用選單「改系列名稱」，新名稱留空。', '日向坂樂園', 10);
+      return;
+    }
+    const n = renameInTabs_(oldName, newName);
+    ss.toast('已把 ' + n + ' 集的「' + oldName + '」改成「' + newName + '」。記得按「更新網站資料」。', '日向坂樂園', 8);
+  } catch (err) { /* 自動同步失敗時不影響編輯 */ }
 }
 
 // ── 檢舉 ──
