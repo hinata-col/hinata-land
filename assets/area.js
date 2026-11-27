@@ -50,8 +50,8 @@ function prepare() {
     ranges.push(['最新 ' + top + '–' + maxAll, top, 9999]);
     for (let a = 1; a < top; a += 50) { ranges.push([a + '–' + (a + 49), a, a + 49]); }
   }
-  ranges.push(['全部集數', 0, 9999]);
-  F.range = F.listFilter ? '全部集數' : ranges[0][0];
+  ranges.unshift(['全部集數', 0, 9999]);
+  F.range = '全部集數';
   SER = S.series.map((name) => {
     const groups = []; let cur = null;
     ALL.forEach((e, i) => {
@@ -150,7 +150,7 @@ function filtered() {
     const num = q.replace(/^#/, '');
     base = /^\d+(\.5)?$/.test(num) ? ALL.filter((e) => e.id === num || e.id === num + '.5') : ALL.filter((e) => (e.zh + ' ' + e.jp + ' ' + e.syn + ' ' + (S.notes[e.key] || '')).toLowerCase().indexOf(q) !== -1 || !!cmtHit(e, q));
   } else {
-    const rg = ranges.filter((x) => x[0] === F.range)[0] || ranges[ranges.length - 1];
+    const rg = ranges.filter((x) => x[0] === F.range)[0] || ranges[0];
     base = ALL.filter((e) => e.n >= rg[1] && e.n <= rg[2] + 0.9);
   }
   const lf = F.listFilter ? (S.lists.filter((l) => l.id === F.listFilter)[0] || null) : null;
