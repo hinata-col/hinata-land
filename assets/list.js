@@ -4,6 +4,7 @@ import { fb } from './fb.js';
 
 const id = new URLSearchParams(location.search).get('l') || '';
 let L = null;
+let openSyn = '';
 
 function notFound() {
   document.title = '找不到這份清單 · 日向坂樂園';
@@ -30,12 +31,24 @@ function render() {
       const s = !!S.seen[e.key];
       return '<article class="vrow" style="background:' + (s ? '#EFFBF4' : '#FFFFFF') + '"><span class="vno hd">' + (i + 1) + '</span>'
         + '<div class="ra"><span class="ep hd">' + esc(epLabel(e)) + '</span><span class="date">' + esc(e.date || '特別篇') + '</span></div>'
-        + '<div class="rb"><div class="tt">' + esc(titleOf(e)) + '</div>' + (e.jp && e.zh ? '<div class="jp" lang="ja">' + esc(e.jp) + '</div>' : '') + '</div>'
+        + '<div class="rb"><div class="tt">' + esc(titleOf(e)) + '</div>' + (e.jp && e.zh ? '<div class="jp" lang="ja">' + esc(e.jp) + '</div>' : '')
+        + (e.syn ? '<div class="syn' + (openSyn === e.key ? ' open' : '') + '">' + esc(e.syn) + '</div><button type="button" class="lnk synt" data-act="syn" data-arg="' + e.key + '">' + (openSyn === e.key ? '收起簡介' : '看完整簡介') + '</button>' : '') + '</div>'
         + '<div class="rc">' + e.tags.map((t) => '<span class="chip" style="background:' + S.tagColor[t] + '">' + esc(t) + '</span>').join('') + '</div>'
         + '<div class="rs"><button type="button" class="seen" data-act="seen" data-arg="' + e.key + '" aria-pressed="' + s + '">' + (s ? '☑ 看過' : '☐ 看過') + '</button>'
         + (S.links[e.key] && /^https:\/\//.test(S.links[e.key]) ? '<a class="btn act vlink" style="margin-top:6px" href="' + esc(S.links[e.key]) + '" target="_blank" rel="noopener noreferrer">▶ 中字</a>' : '') + '</div></article>';
     }).join('') + (eps.length ? '' : '<div class="empty">這份清單還沒有集數。</div>') + '</div></section>';
+  fitSyn();
 }
+
+// 簡介兩行內放得下就不顯示「看完整簡介」
+function fitSyn() {
+  document.querySelectorAll('.syn:not(.open)').forEach((el) => {
+    const t = el.nextElementSibling;
+    if (t && t.classList.contains('synt')) { t.hidden = el.scrollHeight <= el.clientHeight + 1; }
+  });
+}
+let synTimer = 0;
+window.addEventListener('resize', () => { clearTimeout(synTimer); synTimer = setTimeout(fitSyn, 150); });
 
 async function main() {
   header('list'); footer();
@@ -49,6 +62,7 @@ async function main() {
   onChange(render);
   bind(document.body, {
     seen: (k) => setSeen(k, !S.seen[k]),
+    syn: (k) => { openSyn = openSyn === k ? '' : k; render(); },
     fav: async () => { const on = S.favs.indexOf(L.id) < 0; await toggleFav(L.id); L.favs = (L.favs || 0) + (on ? 1 : -1); },
     dup: async () => { const nid = await createList(L.name + '（複製）', L.items || []); if (nid) { try { localStorage.setItem('hl.active', nid); } catch (e) {} toast('已複製到「我做的清單」，可以自己改了'); } },
     copy: () => copyText(shareLink(L.id)),
